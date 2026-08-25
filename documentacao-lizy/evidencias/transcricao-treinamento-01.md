@@ -1,0 +1,270 @@
+# Transcrição automática — Treinamento 01 — Workflow completo do Lizy
+
+> Classificação: **Confirmado como transcrição automática**. Pode conter erros de reconhecimento;
+> nomes, valores e termos técnicos devem ser conferidos no vídeo antes de uso operacional.
+
+Fonte: https://drive.google.com/file/d/1GU6DHWfB4Rrv3pq15I7DweYYLZFAr7-f/view
+
+Idioma detectado: `pt`
+Probabilidade do idioma: `1`
+Duração informada pelo transcritor: `1823.8813125` segundos
+
+## Segmentos
+
+- `00:00:00–00:00:05` Beleza, então isso que a gente está fazendo é exatamente isso daqui, o equipamento chegou,
+- `00:00:05–00:00:12` ele vai, tem essa opção aqui dele fazer o recebimento aqui de forma automática com essa
+- `00:00:12–00:00:19` integração, e aí ele caiu aqui no estoque de terceiro. Aqui, essa etapa é onde a gente vai
+- `00:00:19–00:00:27` abrir a ordem, então a gente vai fazer a abertura da OS. Então, por exemplo, aqui ele vai ter as
+- `00:00:27–00:00:35` funções da nota do cliente da chave de acesso, e aí aqui ele consegue, por exemplo, vamos por
+- `00:00:35–00:00:41` que se queira a nota fiscal, então aqui eu tenho dois equipamentos e aí com essa funcionalidade aqui
+- `00:00:41–00:00:47` é onde eu consigo abrir nas ordens por equipamento, tá? E é aqui, né, quando a gente tiver todas as
+- `00:00:47–00:00:54` fichas disponível que vai aparecer, por exemplo, né? Motor, bomba, qual é o tipo da ficha que a
+- `00:00:54–00:01:01` gente vai abrir a ordem, entendeu? Tá. Então, nesse caso aqui a gente vai, vamos por que se fosse essa de
+- `00:01:01–00:01:08` transformador, né? Então, ele vai selecionar aqui qual é o tipo da ordem, isso aqui ele sempre vai
+- `00:01:08–00:01:14` puxar o sequencial, tá? Então, por exemplo, porque ele sempre vai trazer o sequencial aqui,
+- `00:01:14–00:01:20` a data prevista, as informações que o pessoal já faz aqui ele vai trazer, né? Qual é o cliente?
+- `00:01:20–00:01:28` Se ele sempre vai puxar da nota de remessa, tá? Cliente, número da nota, é fabricante, tá? Qual
+- `00:01:28–00:01:35` que é o fabricante? Qual que é o equipamento? Qual que é o modelo? Qual que é o defeito? E aqui é a
+- `00:01:35–00:01:46` parte das fotos, né? Que é ali no tablet, a pessoa já consegue ir tirando aqui. Aí aqui tem as
+- `00:01:46–00:01:58` opções, né? Deixa eu ver se eu consigo pegar mais fotos aqui. Vou pegar aqui mais umas fotos
+- `00:01:58–00:02:04` que são um pouco mais visual. Então, aqui, Gabriel, a gente consegue, né? E tirando as fotos ali.
+- `00:02:04–00:02:09` Nesse caso, aqui ele puxou pela galeria, mas quando você for tirar no tablet ele já faz direto ali na
+- `00:02:09–00:02:15` câmera, né? Sim. Então, que você consegue tirar aqui. Tá chegando a foto lá do... Tá chegando, né?
+- `00:02:15–00:02:23` Tá aí, tá. Tô colocando o nome aleatório aqui só pra gente ter legenda, tá? E aqui eu consigo, né?
+- `00:02:24–00:02:35` É... Enformar aqui, ó. Se você quer fazer isso em um relatório, não, entendeu? No laudo final, né? Isso.
+- `00:02:35–00:02:43` Perfeito. Tudo isso daqui que a gente tá fazendo, vamos por essa questão aqui das fotos. Eu posso lá no
+- `00:02:43–00:02:49` orçamento também, né? Vamos por que quem tá abrindo a ordem não quer fazer essa gestão aqui.
+- `00:02:49–00:02:54` Tem problema nenhum, ele só tira as fotos lá no orçamento, a pessoa decide se quer que
+- `00:02:54–00:03:02` ele não faça o laudo, se não quer, entendeu? Certo. Tá? Então, esse processo aqui, ó, que a gente
+- `00:03:02–00:03:09` tá fazendo, tá? É exatamente isso aqui, ó. Recebi a nota, recebi o equipamento e tô fazendo
+- `00:03:09–00:03:22` a abertura da ordem, tá? Faltou o número de série aqui, acampou o brigatório. Vou salvar. Aqui,
+- `00:03:22–00:03:27` ó, é o momento que ele já vai gerar a etiqueta, tá? Então, aqui ele já gerou a etiqueta com
+- `00:03:27–00:03:34` o cliente e aí ele vai cair, né? Pra onde que ele vai? Ele vai vir pra serviços, né? E vai ficar
+- `00:03:34–00:03:42` aqui em peritagem, tá? Então, você pode ver, ó, que ele nesse campo aqui, né, de serviços é
+- `00:03:42–00:03:47` onde todas as ordens que a gente abrir, aqui ele tá mostrando que a gente tem 153 ordens, né?
+- `00:03:47–00:03:51` Então, tudo o que eu tiver abrindo de ordem, ele vai cair aqui, ó. E aí ele fica com esse
+- `00:03:51–00:03:58` aqui, aguardando a inspeção, aqui eu consigo tirar uma listagem, né? Então, até aqui tá tranquilo?
+- `00:03:58–00:04:03` Tranquilo. Beleza, aqui na parte da peritagem, então, aqui a gente já tá nesse ponto aqui,
+- `00:04:03–00:04:08` ó, que tá análise, né? Mas algumas empresas usam análise, o caso de vocês é peritagem. Então,
+- `00:04:08–00:04:15` abriu a ordem, a gente veio pra parte da peritagem. Então, o técnico, né, vai vim aqui iniciar o
+- `00:04:15–00:04:21` status, né? Vai colocar aqui qual é o usuário, qual é a senha. E aqui ele já muda o status, né? Então,
+- `00:04:21–00:04:28` aqui ele já ficou, ó, essa ordem, o status analisando e qual é o técnico que tá analisando. E aqui é
+- `00:04:28–00:04:32` onde ele vai fazer a peritagem, né? Que na realidade é o que muda de uma ficha pra outra,
+- `00:04:32–00:04:38` que são os dados aqui, né? Que ele precisa, nesse caso aqui, são os dados que ele precisa pra
+- `00:04:38–00:04:46` ter a peritagem do transformador, né? Isso. Certo? Aí que ele vai seguir, né? Relatório inicial,
+- `00:04:46–00:04:50` tudo isso são as fichas lá com o Franco, ele tá validando, né? Então, isso daqui, ó, eu vou
+- `00:04:50–00:04:55` ir preenchendo aqui só pra a gente ter informação lá no lado. Então, isso aqui é a parte aqui de
+- `00:04:55–00:05:03` relatório inicial. A parte da peritagem, né? Aqui tem essas opções aqui, né, de checkbox aqui,
+- `00:05:03–00:05:13` as opções, fica livre aqui pra digitar, tá? Perfeito. É o que é, é mais a parte técnica ali, né,
+- `00:05:13–00:05:18` que o pessoal já entende. Ele vai passando aqui. Ah, um ponto importante, tá? Por exemplo,
+- `00:05:18–00:05:23` vamos supor que eu fiz esses dois pontos aqui e quero imprimir o Lauda aqui pra ver como que ele
+- `00:05:23–00:05:33` tá aqui. Eu já consigo vim aqui, ó. Eu já consigo e fazendo a impressão, tá vendo? Não
+- `00:05:33–00:05:40` vou terminar pra me ter o Lauda. Já consigo aqui nas etapas que eu tiver aqui, ó, eu quero imprimir
+- `00:05:40–00:05:48` só isso, você consegue, entendeu? Legal. Ok. Então aqui, ó, tô preenchendo os dados elétricos, né?
+- `00:05:48–00:05:54` Os serviços da ordem, isso aqui ele sempre vai puxar da tabela, tem uma tabela mesmo de serviço de
+- `00:05:54–00:05:59` vocês, né? Então, a gente pode cadastrar aqui, ó, ela vai ter a tabela, vai ter qual é o
+- `00:05:59–00:06:05` editor, né? Que vai realizar e isso é óbvio, né? Que essa parte aqui dos técnicos é na parte
+- `00:06:05–00:06:10` lá da peritagem não vai ter acesso a valores, né? Está aparecendo só porque eu tô no meu
+- `00:06:10–00:06:15` usuário aqui. E esse campo aqui a gente pode até colocar alguma observação, né? Então,
+- `00:06:15–00:06:26` por exemplo, urgentes vou colocar aqui. Então aqui, ó, e aqui eu vou adicionando todos os serviços,
+- `00:06:26–00:06:38` né? Rejuvia nesse momento. Então, nessa forma aqui que eu vou adicionando todos os serviços
+- `00:06:38–00:06:44` da ordem. Da mesma forma, a parte de peças, né? Então, ah, eu vou ter lá na tabela, né? No
+- `00:06:44–00:06:49` cadastro aqui de produtos, eu vou ter todos os produtos, né? Rolamento, uma tampa flange,
+- `00:06:49–00:06:56` retentor, enfim, tudo isso. Vou adicionando aqui no mesmo, na mesma dinâmica, né? Seleciono,
+- `00:06:56–00:07:02` adiciono. Seleciono e adiciono, tá? Aqui é a parte de serviços externos, né? Então,
+- `00:07:02–00:07:11` eu vou pegar aqui um fornecedor. Qual seria o serviço, tá? O valor não seria o caso aqui. Vou
+- `00:07:11–00:07:18` colocar dez dias, tá? Tudo isso depois vai refletir lá no PCP. Parte de arquivos, né? Então, se você
+- `00:07:18–00:07:24` tem algum equipamento, tem que gerar algum aldo aí, vou surf de teste, alguma coisa, você consegue
+- `00:07:24–00:07:32` anexar o PDF aqui, tá? E aí aqui tem a opção de você anexar o PDF e apresentar no
+- `00:07:32–00:07:40` lado ou não, tá? Então, aqui você tem a sua opção. Vou até anexar aqui, ó. Vou pegar aqui
+- `00:07:40–00:08:07` o Anexas Workflow aqui. Só pra você ver como que aparece um PDF aqui. Workflow, vou adicionar aqui,
+- `00:08:07–00:08:14` tá? Vou colocar o que eu quero que apresenta no relatório. E aqui, o final, as fotos do
+- `00:08:14–00:08:20` vídeo desmontado, né? Vou inserir mais fotos aqui pra gente tendo mais essa visão.
+- `00:08:36–00:08:43` Aqui, ó, finalizou, né? Todas essas etapas, né? Então, a gente veio do relatório inicial,
+- `00:08:43–00:08:48` peritagem, dados elétricos, enfim, até a parte das fotos, aqui eu já consigo, tá,
+- `00:08:48–00:09:07` imprimir esse esse lado técnico, né? Uma dúvida que eu tinha realmente é se esse
+- `00:09:07–00:09:13` é um técnico, ele é porque a gente tem aqui um laudo técnico inicial e o laudo técnico final.
+- `00:09:13–00:09:22` Aí pra saber de férias eu só franque pra te dizer, né? Mas a gente tem esse, essa questão aí no
+- `00:09:22–00:09:28` Líseo é só um laudo mesmo. É, não, aí a gente depois vai ter, esse aqui é o laudo aqui
+- `00:09:28–00:09:32` que ele gera na peritagem, né? Aí quando finaliza, né, ele vai ter o laudo final, tá? Ah,
+- `00:09:32–00:09:38` tá perfeito. Tá, então aqui, né? Ele trouxe, ó, as fotos que eu adicionei, tá vendo? Alguns eu
+- `00:09:38–00:09:44` coloquei legenda, algumas fotos eu coloquei pra sair ou não, as fotos do equipamento desmontado, né? E
+- `00:09:44–00:09:49` toda a parte aqui, né? Avaliação elétrica, teste, tudo o que tá lá nas fichas que a gente foi
+- `00:09:49–00:09:56` preenchendo, né? Ele sai aqui com os cheques e com os campos de observações, né? OK, tá? Aqui ele
+- `00:09:56–00:10:02` vai sair, né? O que eu coloquei na parte da mão de obra, aqui a parte do serviço externos e
+- `00:10:02–00:10:08` as peças que vão ser utilizadas e aqui ele vai sair o PDF Conexing, no caso foi esse workflow aqui,
+- `00:10:08–00:10:20` né? OK. Legal. Feito isso, né? É, aqui, ó, ele tá analisando, eu vou finalizar a expressão, ele vai
+- `00:10:20–00:10:27` seguir, né? Pro módulo comercial. Então assim, nesse momento aqui ele sai, né? Da parte do serviço e
+- `00:10:27–00:10:34` ele vem aqui pro módulo comercial, que é a parte, né? Que vai checar valores, tudo que foi feito lá. Então ele
+- `00:10:34–00:10:41` já apareceu aqui, ó, em aguardando o envio, tá? Aqui, né? A gente vai conseguir abrir essa ordem, ele vai
+- `00:10:41–00:10:46` trazer, né? Todos os dados, tá? Foi feito que a gente acabou de fazer, né? Os dados aqui iniciais
+- `00:10:46–00:10:53` da abertura da ordem, com as fotos, né? A parte lá da peritagem e aqui ele traz as peças, né? Então,
+- `00:10:53–00:10:59` qual peças da ordem eu consigo ver aqui, né? No detalhe aí, sim, no comercial vai aparecer o valor,
+- `00:10:59–00:11:05` quais foram os serviços, né? Que vai ter qual o valor e aqui eu tenho o valor total, né? Que ele mostra
+- `00:11:05–00:11:12` o valor total dos serviços, né? Aqui, o valor total dos produtos, aqui como tá zerado, né? Vou ter que colocar
+- `00:11:12–00:11:19` aqui um valor aqui nos e aqui consegue editar, tá, Gabriel? Apesar que ele puxa da tabela, mas na hora
+- `00:11:19–00:11:26` que ele vai fazendo orçamento ali, caso precisa de editar alguma coisa, ele consegue. Ok. Aqui a gente
+- `00:11:26–00:11:31` consegue, por exemplo, né? Colocar um desconto, então consigo ver essa parte de desconto. Aqui a
+- `00:11:31–00:11:38` gente tem a parte aqui, né? Da da condição, da garantia, do prazo de entrega, tá? Tudo isso aqui
+- `00:11:38–00:11:44` fica pedido de compra, se eu já tiver o pedido de compra, então consigo preencher aqui. Tem as
+- `00:11:44–00:11:51` pedidos misto, que são dos dois, ou pedido de produto, ou pedido de serviço, tá? É, aqui as
+- `00:11:51–00:12:01` observações, né? Então aqui dá pra gente colocar, por exemplo, né? É, colocar alguma palavra aqui só
+- `00:12:01–00:12:11` pra você ver prioridade. Aqui eu tenho a opção, né? De colocar a opção sufrete é SIF, se eu não
+- `00:12:11–00:12:16` marcar ele já ficou automaticamente fobe. Aqui eu tenho, isso que é importante no orçamento, tá,
+- `00:12:16–00:12:22` isso aqui é se eu quero mostrar as peças ou não, mostrar valores das peças ou não. Então,
+- `00:12:22–00:12:36` por exemplo, eu vou salvar aqui individual, né? Isso, então vou pegar aqui, ó, propósito comercial.
+- `00:12:36–00:12:41` Então você pode observar, aqui ele vai trazer aqui, ó, não trouxe nada, ele trouxe só a parte
+- `00:12:41–00:12:48` aqui da mão de obra, né? E trouxe o valor total do orçamento, tá? E aqui, ó, se você colocar
+- `00:12:48–00:12:57` as peças e mostrar valores, tá? Alter o orçamento aqui, ele já vai aparecer nesse formato aqui,
+- `00:12:57–00:13:13` ó. Ele vai trazer, né? Quais são as peças nesse caso só tem uma e qual é o valor da peça, tá? Então
+- `00:13:13–00:13:19` você tem a subção. Certo. E aqui ele vai trazer, né? Condições gerais, condições de pagamento,
+- `00:13:19–00:13:25` prazo de entrega, garantia no caso marquei que o frete foi SIF e aqui as observações do
+- `00:13:25–00:13:30` orçamento, tá? Aqui a gente tem que adicionar, né? As condições gerais, termo de garantia,
+- `00:13:30–00:13:39` tudo isso vai sair no laudo também. Feito. Feito isso, né? Aqui a gente tem a, a gente consegue já
+- `00:13:39–00:13:43` imprimir o PDF e mandar pro cliente, então vou colocar aqui, por exemplo, que eu enviei o orçamento
+- `00:13:43–00:13:48` pro cliente, automaticamente ele sai daqui de aguardando o envio e ele fica nesse status aqui,
+- `00:13:48–00:13:54` ó, aguardando a aprovação, tá? Então aqui eu tenho alguns tipos, né? De agendamentos que
+- `00:13:54–00:13:59` você vai criar, algumas observações que eu posso colocar aqui enquanto isso tá no comercial, né?
+- `00:13:59–00:14:06` Mas pra controle, tá? Até aqui, tranquilo? Tranquilo. Só me lembra onde é que é aquela parte que a
+- `00:14:06–00:14:12` gente envia o orçamento direto pro cliente, doido da plataforma. Ah, aqui ó, então aqui eu consigo
+- `00:14:12–00:14:18` vim aqui, né? Isso. Então aqui ele sempre vai puxar, né? O usuário que já tá, o e-mail que
+- `00:14:18–00:14:24` já tá no cadastro do cliente, mas por exemplo, se eu quiser inserir aqui, por exemplo, na
+- `00:14:24–00:14:30` que eu tô fazendo aqui, ó, quero inserir algum e-mail. Então consigo inserir aqui também, tá? Aí
+- `00:14:30–00:14:40` quando eu enviar, você sempre vai ter o histórico aqui, quer ver? Então, por exemplo, né? Vou pegar
+- `00:14:40–00:14:47` isso daqui, enviar o orçamento aqui, ó, histórico de envio, ele sempre vai trazer aqui, ó, a data de
+- `00:14:47–00:14:56` envio e se realmente foi enviado ou não, tá? Ok. Beleza. Deixa eu só fechar a porta aqui,
+- `00:14:56–00:15:06` o pessoal tá comemorando Copa do Mundo mais cedo que parece. Fica tranquilo. Buzinho aqui. Bora lá.
+- `00:15:07–00:15:13` Beleza. Então até aqui tranquilo. Tranquilo. Tá. Aqui eu tenho a opção, né? O cliente não
+- `00:15:13–00:15:20` aprovou, tá? Ele vai vir pra não aprovados, finalizou aqui no comercial. O cliente aprovou, tá? Ele
+- `00:15:20–00:15:27` vai vir aqui, ele vai seguir o fluxo, né? Vai vir aqui pra aprovados, tá? E aí ele vai gerar uma
+- `00:15:27–00:15:34` requisição de estoque das peças, então você pode ver que, ó, ele gerou uma requisição aqui da
+- `00:15:34–00:15:39` tampa flanja, ou seja, né? Eu aprovei o orçamento, ele liberou o promoxerifado, separa as peças e já
+- `00:15:39–00:15:45` mandou também lá pro seu PCP, certo? Que se a gente for analisar, né? Aqui no workflow é isso daqui,
+- `00:15:45–00:15:51` aprovei no módulo comercial, ele veio aqui pro PCP e veio pro suprimentos também já separar as peças.
+- `00:15:51–00:15:56` Então, vamos lá, né? Na parte do suprimento, o que que eu vou fazer? Aqui em suprimentos,
+- `00:15:56–00:16:04` estoque, eu já consigo vir aqui, ó, baixar a requisição, tá? Então aqui, ó, ele já vai
+- `00:16:04–00:16:10` mostrar, né? Geralmente o pessoal faz isso, né? Já imprime isso daqui, já separa as peças. Aí,
+- `00:16:10–00:16:15` na parte dos suprimentos, essa funcionalidade aqui, quebrou, é pra me fazer o seguinte, olha,
+- `00:16:15–00:16:20` chegou a requisição pra mim de uma tampa flanja, então eu vou pegar aqui, ó, selecionar ela,
+- `00:16:20–00:16:26` colocar o estoque, né? Aqui ele tá falando pra mim, ó, que eu não tenho isso no estoque, tá?
+- `00:16:26–00:16:32` Se eu tivesse, ele só ia falar, ok, fica com status aqui aguardando retirado, ou seja,
+- `00:16:32–00:16:37` eu já dei baixa no estoque, só tô aguardando, né? Retirar isso, é...
+- `00:16:37–00:16:42` lá dá uma xarefada, né? Xarefada, né? São duas etapas de validação. Primeira pra você
+- `00:16:42–00:16:48` validar se você tem o item ou não, e a segunda é quem tá retirando isso do estoque, tá? Ok. Então,
+- `00:16:48–00:16:53` vamos supor que nesse cenário, né? Se eu não tivesse essa tampa aqui, eu já consigo vir nessa
+- `00:16:53–00:16:59` função aqui, ó, e já gerar, tá? Uma requisição de compra. Então ele vai sempre, sempre fica
+- `00:16:59–00:17:04` vinculado a essa, então você pode ver que ele já saiu aqui do estoque e já gerou aqui,
+- `00:17:04–00:17:10` uma requisição de compra, tá? Então ele caiu aqui, ó, e aqui ele vai seguir o mesmo fluxo, né?
+- `00:17:10–00:17:17` Ele gerou uma requisição de compra, eu vou gerar uma cotação, tá? Então, ó, eu vou pegar aqui a tampa
+- `00:17:17–00:17:22` flange, vou pegar aqui qual fornecedor que eu quero cortar, nesse caso eu vou pegar só um, né?
+- `00:17:22–00:17:28` Mas ele vai trazer também a lista de todos os fornecedores, tá? Então, automaticamente ele
+- `00:17:28–00:17:35` vai colocar aqui uma cotação, onde eu consigo vir aqui, ó, baixar ela, né? Então, por exemplo,
+- `00:17:35–00:17:41` ó, consigo pegar isso aqui, mandar para todos os fornecedores que eu vou cortar, tá? Voltando,
+- `00:17:41–00:17:48` né? Essa cotação dos fornecedores, eu consigo vir aqui, ó, nesses três pontinhos, e aí aqui é
+- `00:17:48–00:17:55` onde eu vou pegar, ó. Então, ah, potei com esse fornecedor aqui, né? Prazo de entrega dez dias,
+- `00:17:56–00:18:12` é a condição de pagamento que eu cotei trinta dias, valor unitário, né? Vou colocar aqui 100 reais e aí
+- `00:18:12–00:18:16` vou salvar. Então, sim, você viu que eu peguei aqui só um fornecedor, mas aqui se eu tivesse
+- `00:18:16–00:18:22` selecionado vários fornecedores, ia parecer todos, entendeu? Então, feito isso, né? Aqui
+- `00:18:22–00:18:26` vai ir a ter, né, todos os fornecedores, né, que eu cotei. Então, o que eu consigo? Vamos
+- `00:18:26–00:18:31` colocar aqui essa ACME aqui é quem ganhou a cotação. Então, eu vou vir aqui no joinha,
+- `00:18:31–00:18:37` selecionar aqui qual é o equipamento, né? O cliente, o fornecedor ele já vai trazer aqui de forma
+- `00:18:37–00:18:42` automática, né? E eu vou colocar quais são as condições de pagamento. Então, por exemplo, fechei
+- `00:18:42–00:18:47` com esse fornecedor, foi boleto, condição de pagamento foi trinta dias, isso que eu comprei é
+- `00:18:47–00:18:52` uma matéria prima, a conta que eu vou pagar, e se eu quiser colocar aqui alguma observação,
+- `00:18:53–00:19:03` eu consigo colocar, tá? Então, aqui ele já finalizou a cotação e gerou um pedido de compra, tá? Então,
+- `00:19:03–00:19:09` aqui ele já vai ficar, ó, aguardando entrega, tá? O pedido, qual que é a requisição, ele traz o
+- `00:19:09–00:19:14` número da OS sempre vinculado, então, por exemplo, ah, eu tô com um motor aí que tá atrasado,
+- `00:19:14–00:19:19` eu sempre vou ter aqui, ó, o status da ordem de serviço, tá? Então, pra você ter que a data de
+- `00:19:19–00:19:27` compra, tudo certinho, viu? E aí, quando a nota fiscal chegar, né? O que que ele vai acontecer?
+- `00:19:27–00:19:33` A gente falando dessa parte de suprimentos, né? É, ele vai entrar com a nota, tá? Então, a nota de
+- `00:19:33–00:19:39` produto, aqui ele consegue vincular o pedido de compra. Isso é legal, tá? Já vai direto. Já vai
+- `00:19:39–00:19:46` direto. Nesse caso, eu vou ter que, como a gente não tem a nota, né? Eu vou entrar com ela aqui por
+- `00:19:47–00:20:04` aí. Vou baixar por protocolo aqui, pera aí. Deixa eu ver se ele vai aceitar. Então, aqui, ó, como eu
+- `00:20:04–00:20:09` não tenho a nota, ó, ele ficou aqui em protocolo, então, ele não finalizou porque eu não alimentei
+- `00:20:09–00:20:16` o estoque, mas aqui ele iria, né, finalizar aqui o pedido de compra. Automaticamente ele
+- `00:20:16–00:20:20` alimenta o meu estoque, tá? Vim com o lado de um produto e alimenta também o meu financeiro,
+- `00:20:20–00:20:26` né? Então, ele vai entrar aqui por contas a pagar. Entendi. Entendeu? Então, na entrada da nota, ele
+- `00:20:26–00:20:33` faz duas coisas, né? Ele vai vir lá pro estoque, né? Pro produto e financeiro. E aí, essa requisição,
+- `00:20:33–00:20:38` né? Que estava pendente aqui, ó, olha lá, então, ela já mudou o estado, tá vendo? Ó, compra
+- `00:20:38–00:20:44` finalizada dia dez ou seis. Então, o cara já consegue vir aqui, ó. E só dá baixa e já
+- `00:20:44–00:20:54` dá peça pro eh pra pessoa responsável, né? Da oficina, certo? Perfeito. É, aqui ele fez duas
+- `00:20:54–00:20:59` coisas. A gente simulou um cenário aqui, Gabriel, como se ele, como se a gente não tivesse essa peça no
+- `00:20:59–00:21:04` sistema, tá? Mas, por exemplo, se você tivesse essa peça, então é só dar o que aqui? Entragar
+- `00:21:04–00:21:12` a peça pra quem vai executar o serviço, tá? Ok. E aí, voltando, né, pra parte de serviço,
+- `00:21:12–00:21:17` o que ele faz, né? Essas duas coisas. Então, ele veio pro módulo aqui de suprimentos pra separar
+- `00:21:17–00:21:23` as peças e veio também pro PCP. Aqui no módulo PCP é bem tranquilo. Isso daqui, o que que ele vai
+- `00:21:23–00:21:29` fazer, né? Aqui é onde ele cai, né? Tudo que foi aprovado. Então, aquele tá mostrando que eu
+- `00:21:29–00:21:36` tenho setenta e oito ordens e aqui é onde eu vou planejar, né? A ordem em cima do que eu fiz lá
+- `00:21:36–00:21:42` na passagem. Então, eu tenho que vir aqui, ó, realizar planejamento. Aqui eu já sei de cabeça
+- `00:21:42–00:21:47` que a gente só colocou nessa ordem que tem rebobinamento e rejuvencimento, né? Mas se não tivesse, era
+- `00:21:47–00:21:56` só eu abrir a ordem aqui e olhar quais são os serviços que tem pra essa ordem, certo? Ok. Isso
+- `00:21:56–00:22:01` daqui, tá? Ele funciona de uma forma assim. Ele não é obrigatório você planejar eh todos
+- `00:22:01–00:22:07` de uma vez. Então, por exemplo, eu quero primeiro planejar só o rebobinamento. Depois que terminar,
+- `00:22:07–00:22:11` eu planejo o rejuvencimento. Então, você pode trabalhar aqui de forma independente, tá?
+- `00:22:11–00:22:17` Hum, interações também. E aí, de acordo que você vai planejando, ó, o que fica em cor cinza, né?
+- `00:22:17–00:22:23` Então, por exemplo, se você puxar o número dessa ordem, você vai identificar aqui. Você não
+- `00:22:23–00:22:30` tem, né? Essas outras etapas aqui, tá? Que pra essa ordem você tem, né? Rebobinamento,
+- `00:22:30–00:22:35` recimento, e depois inicia a montagem. Que esses aqui são os setores, né? Obrigatórios que a gente fala,
+- `00:22:35–00:22:42` né? E aí, Gabriel, outra coisa aqui, ó, se você pegar, por exemplo, olha, a gente planejou aqui,
+- `00:22:42–00:22:48` ó, que eu não tenho corte aqui. Então, se você vier pesquisar essa ordem aqui, ela não vai
+- `00:22:48–00:22:57` aparecer, tá? Ela só aparece, ó, nos setores que eu planejei, que a gente planejou. Então,
+- `00:22:57–00:23:08` ó, rebobinamento. Se eu vier aqui no setor de rebobinamento, ele vai mostrar, ó, que eu tenho sete. Aí,
+- `00:23:08–00:23:14` ele aparece aqui, entendeu? Então, ele só aparece nos setores aqui que a gente planejou. Então,
+- `00:23:14–00:23:29` quando eu vier aqui, ó, aí, quando eu vier aqui, ó, a verica aqui, ele já mudou os status. Então,
+- `00:23:29–00:23:33` toda vez que você consultar essa ordem, você vai ver, ó, rejuvencimento, eu ainda não fiz,
+- `00:23:33–00:23:41` o rebobinamento ainda está em andamento, entendeu? Então, ele sempre vai mudando o status. Então,
+- `00:23:41–00:23:55` rebobinamento, eu vou vim aqui, vou finalizar a expção, rejuvencimento também, eu vou vim aqui. E ele
+- `00:23:55–00:24:01` vai seguir, tá, Gabriel? É o mesmo, mesmo formato para todos os setores, né? O técnico pega o
+- `00:24:01–00:24:06` equipamento, inicia o serviço, ele muda os status lá no PCP para em andamento. Quando você
+- `00:24:06–00:24:13` está utilizando aqui, ele vai sempre mudando o status, né? Então, aqui ele já vai cair para
+- `00:24:13–00:24:35` montagem, tá? Aí ele já finaliza. É, aí o que que ele faz, ó? Esses setores aqui a gente chama de
+- `00:24:35–00:24:40` independente, ou seja, pode ser que em algum equipamento você faz, em outro não faz, daqui para
+- `00:24:40–00:24:45` frente são os setores que a gente chama, né? De setores obrigatórios. Por quê? Depois que
+- `00:24:45–00:24:48` termina a montagem, ele tem que fazer o teste. Depois que termina o teste, obrigatoriamente vai
+- `00:24:48–00:24:53` procurar, depois para o acabamento. Então, essa parte aqui, ó, ele nem fica aqui para você
+- `00:24:53–00:24:59` planejar, porque ele entende que são setores obrigatórios, entendeu? Perfeito. Então,
+- `00:24:59–00:25:09` por exemplo, ele está em testes finais, eu vou vim aqui, né? Vou pegar aqui, ó, iniciar, vou
+- `00:25:09–00:25:23` pegar aqui, finalizar, você pode ver, ó. Aí ele já foi para a pintura, tá vendo? Ele vai
+- `00:25:23–00:25:30` continuar, eu não preciso de planejar. Tá, e da pintura, então vem aqui, inicia o serviço,
+- `00:25:30–00:25:44` vem aqui, finalizar, pode ver que aí ele já foi, ó, se a gente puxar aqui, ele já foi,
+- `00:25:44–00:25:50` ó, para acabamento, tá? Ele sempre, esses módulos aqui que a gente não planeja, ele já vai
+- `00:25:50–00:25:59` ir de forma automática. Então, vem aqui iniciar o serviço, até a última etapa aqui do
+- `00:25:59–00:26:07` vídeo. Então, feito isso, né? Essa parte do PCP, tudo que a gente, que é essa etapa, né? Quando eu
+- `00:26:07–00:26:14` finalizar aqui no PCP, automaticamente ele vai fazer duas coisas agora, né? Ele vai vir aqui para
+- `00:26:14–00:26:23` finalizados, tá? Que aí aqui, Gabriel, é onde você tinha falado. Aí aqui é onde eu gero o
+- `00:26:23–00:26:30` final. Hum, perfeito. Então, assim, né? Respondendo a sua pergunta, então lá a gente viu o
+- `00:26:30–00:26:37` lado técnico, aqui a gente vai ver o lado final, certo? É que eu imaginei que fosse um documento
+- `00:26:37–00:26:44` desde o início até o fim do do processo, mas são dois mesmo, né? Isso, e aí aqui ele vai
+- `00:26:44–00:26:48` fazer duas coisas, né? Ele vai liberar lá para o seu financeiro faturar, nós podemos ver que ele
+- `00:26:48–00:26:53` já caiu aqui, ó, só emitir a nota de serviço ou a nota de produto e ele também já tá
+- `00:26:53–00:27:03` aqui na parte de estoque de terceiro para é mandar o equipamento embora, entendeu? Ok, perfeito. Então,
+- `00:27:03–00:27:08` assim, não sei se eu imagino que agora, né? Você conhece essa visão mais geral aí do processo, quando
+- `00:27:08–00:27:15` o pessoal for fazer os testes ali, é claro que depois a gente pode reforçar, né? Sim, não, mas eu já
+- `00:27:15–00:27:22` vou passar para o pessoal já, tranquilo. O que eu anotei aqui já é, já é ouro para a gente, já.
+- `00:27:22–00:27:28` Não, maravilha, eu também gravei, geralmente demora alguns minutos para liberar aqui para
+- `00:27:28–00:27:34` minha gravação do Google. Aí eu já, eu já te mando, tá? Tá, eu queria só tirar algumas
+- `00:27:34–00:27:44` dúvidas contigo, é, quanto ao PDF primeiro, né? Que você ficou de mandar o PDF do fluxo,
+- `00:27:44–00:27:52` que eu mando para o pessoal. Isso. Para dar uma olhada, tá bom? Já te mando. E aí eu queria te pedir
+- `00:27:52–00:27:59` para a gente fazer esse, esse momento de teste, né, de ir testando, eu queria te pedir o cadastro de
+- `00:27:59–00:28:04` motor, porque o Vila que só tem transformador, né? Isso. Eu queria te pedir o cadastro de motor,
+- `00:28:04–00:28:12` porque é o que mais se aparece ali no nosso escopo do dia a dia. Tá bom. Isso eu vejo,
+- `00:28:12–00:28:18` como é, vamos falar assim, personalizado para vocês, né? O pessoal tá, tá trabalhando ainda,
+- `00:28:18–00:28:23` mas eu peço para dar prioridade nessa de motor então, para disponibilizar para você, pode ser?
+- `00:28:23–00:28:30` Pode ser, perfeito. E a dúvida que eu tenho também, quanto ao acesso do, do pessoal,
+- `00:28:30–00:28:37` da parte técnica, pessoal ali do, do serviço, eu sei que eles acessam através de um, um
+- `00:28:37–00:28:43` principal, né? Um acesso pai, que eu digo ali. Isso. E a partir dali eles conseguem acessar,
+- `00:28:43–00:28:50` mas eles acessam utilizando um nome e uma senha, como é que faz, exatamente? Isso, o mesmo
+- `00:28:50–00:28:56` forma que você acessa, ele vai ter um usuário e uma senha, teria que ser um, um, um, um e-mail aí
+- `00:28:56–00:29:02` que você vai usar para todos, né? E aí todo mundo vai acessar por esse usuário. Então é só você
+- `00:29:02–00:29:08` verificar aí, qual que seria esse usuário e aí cada um, naquela parte que eu faço os apontamentos
+- `00:29:08–00:29:15` ali, né? Sim. Que a parte que eu faço ali, por exemplo, inicie e finaliza, ali cada um vai colocar o
+- `00:29:15–00:29:22` técnico, né? Isso. Entendeu? Perfeito. Então assim, só você verificar qualquer esse usuário padrão,
+- `00:29:22–00:29:28` no seu caso é o Gabriel, no caso deles vamos por que vai ser oficina, rouba, visão. E todo mundo,
+- `00:29:28–00:29:34` as vezes o pessoal até no tablet ali já deixa isso até logado, entendeu lá? Já fica salvo, né?
+- `00:29:34–00:29:39` Já fica salvo, na hora que o cara entra lá, entra tudo certo, entendeu? Com beleza, a gente vai
+- `00:29:39–00:29:46` providenciar então um e-mail para isso. Tá. Ok, então mais a isso, mais a isso. Mesmo nos próximos
+- `00:29:46–00:29:53` passos, acho que é só uma mais implementação, né? Isso aí, é, eu vou olhar aqui como que
+- `00:29:53–00:30:00` são as fichas e aí eu atualizo você até para a gente ter no cronograma aí tudo certinho, tá? Tá. Até
+- `00:30:00–00:30:06` sexta-feira eu já passo para você uma visão geral e aí eu vou te mandar o vídeo a esse workflow
+- `00:30:06–00:30:12` e vou ver como está aquela questão das fichas lá de motor, tá? Perfeito. Beleza, Gabriel? Obrigado.
+- `00:30:12–00:30:16` Muito obrigado, Murilo, Letícia, obrigado aí. Valeu, tchau, tchau. Até mais.
