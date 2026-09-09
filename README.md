@@ -23,11 +23,21 @@ O conteúdo gerado em `dist/` pode ser publicado como site estático. Na Vercel,
 
 ### Limitações do MVP
 
-- não há backend, autenticação ou banco de dados;
-- alterações de estado são gravadas no `localStorage` e ficam somente no dispositivo atual;
-- o link público sempre carrega os estados iniciais consolidados no código;
+- a integração de status compartilhado já está preparada no código, mas depende de concluir a autorização do projeto Supabase e cadastrar as variáveis de ambiente na Vercel;
+- enquanto a conexão não é concluída, alterações de estado continuam gravadas no `localStorage` e ficam somente no dispositivo atual;
 - prioridades são uma classificação proposta pela Elétrica Visão, não uma definição da Lizy;
 - o histórico precisa ser revalidado e não comprova o funcionamento atual do ERP.
+
+## Status compartilhado ao vivo
+
+O painel foi preparado para usar Supabase Realtime. Para ativar em produção, a pessoa administradora precisa concluir a conexão do Supabase no Codex, criar a tabela `task_statuses` com políticas de leitura pública e edição apenas para usuários autenticados, e cadastrar na Vercel as variáveis abaixo a partir do projeto Supabase:
+
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+```
+
+Depois disso, usuários autorizados entram por link enviado ao e-mail e podem alterar estados; visitantes acompanham as atualizações em tempo real. Nunca use chave `service_role` no frontend.
 
 ## Documentação histórica
 

@@ -35,6 +35,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .brand__copy small { color: var(--muted); font-size: 11px; margin-top: 3px; }
 .topbar__meta { display: flex; align-items: center; gap: 20px; color: var(--muted); font-size: 12px; }
 .topbar__meta span { display: flex; align-items: center; gap: 6px; }
+.live-indicator { color: #207455; font-weight: 700; }
+.live-indicator svg { color: #2aa873; }
+.session-button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; color: #1b5d91; background: #edf5fb; border: 1px solid #d8e8f5; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.session-button:hover { background: #e1eff9; }
 
 .hero { min-height: 330px; padding: 60px max(6.5vw, 28px) 66px; display: flex; justify-content: space-between; align-items: center; gap: 50px; color: white; background: radial-gradient(circle at 82% 30%, rgba(43, 128, 190, .42), transparent 25%), linear-gradient(115deg, #0c203a 0%, #163b68 64%, #125888 100%); position: relative; overflow: hidden; }
 .hero::before { content: ''; position: absolute; width: 480px; height: 480px; border: 1px solid rgba(255,255,255,.07); border-radius: 50%; right: -120px; top: -240px; }
@@ -61,6 +65,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .notice-card { min-height: 56px; transform: translateY(-28px); margin-bottom: -2px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; background: #fffaf0; border: 1px solid #f3dfb0; border-left: 4px solid #d89a23; border-radius: 8px; box-shadow: var(--shadow); color: #674c1d; }
 .notice-card svg { flex: 0 0 auto; }
 .notice-card p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+.login-panel { transform: translateY(-19px); margin: 0 14px 5px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; background: #f1f8fc; border: 1px solid #cde5f1; border-radius: 8px; box-shadow: var(--shadow); }
+.login-panel > div { display: grid; min-width: 230px; }
+.login-panel strong { color: #214c6e; font-size: 12px; }
+.login-panel span { margin-top: 3px; color: #637b8d; font-size: 11px; }
+.login-panel label { flex: 1; }
+.login-panel input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #bcd6e5; border-radius: 5px; outline: none; background: white; color: #263b4e; font-size: 12px; }
+.login-panel button { height: 38px; padding: 0 13px; color: white; background: #1e6eaa; border: 0; border-radius: 5px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.login-panel button:disabled { opacity: .6; cursor: wait; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
 .summary-card { min-height: 118px; padding: 19px; display: flex; align-items: flex-start; gap: 15px; background: var(--surface); border: 1px solid #e3e9ef; border-radius: 9px; box-shadow: 0 5px 16px rgba(22, 52, 82, .035); }
 .summary-card__icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 8px; color: #216bb2; background: #e9f2fb; }
@@ -92,6 +104,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .search-box button { width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; color: #718193; background: transparent; }
 .select-wrap { min-width: 160px; height: 40px; display: flex; align-items: center; position: relative; border: 1px solid #ced8e2; border-radius: 6px; background: white; }
 .select-wrap select { width: 100%; height: 100%; padding: 0 34px 0 11px; appearance: none; border: 0; outline: 0; background: transparent; color: #43566a; font-size: 11.5px; cursor: pointer; }
+.select-wrap select:disabled { color: #8996a3; cursor: not-allowed; }
 .select-wrap > svg { position: absolute; right: 10px; pointer-events: none; color: #7c8a99; }
 .clear-button { height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 10px; color: #52677a; background: transparent; border: 0; font-size: 11px; }
 
@@ -162,6 +175,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .task-row > div:not(.task-main) { display: inline-block; }
   .select-wrap--status { width: 180px; }
   .source-strip { grid-template-columns: repeat(3, 1fr); }
+  .login-panel { flex-wrap: wrap; }
   .source-strip > p { grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid #d4dee5; text-align: left; }
 }
 
@@ -176,6 +190,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   .button:first-child { grid-column: 1 / -1; }
   .content { padding: 0 14px 45px; }
   .notice-card { align-items: flex-start; }
+  .login-panel { margin: 0 2px 8px; align-items: stretch; }
+  .login-panel > div, .login-panel label, .login-panel button { width: 100%; min-width: 0; }
   .summary-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
   .summary-card { min-height: 120px; padding: 14px; gap: 9px; flex-direction: column; }
   .summary-card__icon { width: 30px; height: 30px; }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
@@ -10,8 +10,11 @@ import {
   ExternalLink,
   FileClock,
   Filter,
+  LogIn,
+  LogOut,
   PackageCheck,
   Printer,
+  Radio,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -20,6 +23,8 @@ import {
   X,
 } from 'lucide-react'
 import { CURRENT_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
+import { isSupabaseConfigured, supabase } from './lib/supabase'
+import { mergeTaskStatuses, statusMap } from './lib/statuses'
 import { buildReportText, filterTasks } from './utils/tasks'
 
 const STORAGE_KEY = 'eletrica-visao-lizy-status-v1'
@@ -49,7 +54,7 @@ function SummaryCard({ icon: Icon, label, value, detail, tone = 'blue' }) {
   )
 }
 
-function DetailPanel({ task, onClose, onStatusChange }) {
+function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
   if (!task) return null
   return (
     <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -69,9 +74,9 @@ function DetailPanel({ task, onClose, onStatusChange }) {
           <h2 id="detail-title">{task.title}</h2>
           <p className="detail-description">{task.description}</p>
 
-          <label className="field-label" htmlFor="drawer-status">Estado nesta versão local</label>
+          <label className="field-label" htmlFor="drawer-status">Estado compartilhado</label>
           <div className="select-wrap drawer-status">
-            <select id="drawer-status" value={task.status} onChange={(event) => onStatusChange(task.id, event.target.value)}>
+            <select id="drawer-status" disabled={!canEdit} value={task.status} onChange={(event) => onStatusChange(task.id, event.target.value)}>
               {STATUSES.map((status) => <option key={status}>{status}</option>)}
             </select>
             <ChevronDown size={16} aria-hidden="true" />
@@ -99,12 +104,18 @@ function App() {
   const [status, setStatus] = useState('')
   const [priority, setPriority] = useState('')
   const [savedStatuses, setSavedStatuses] = useState(loadStatuses)
+  const [remoteStatuses, setRemoteStatuses] = useState({})
+  const [session, setSession] = useState(null)
+  const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
+  const [authEmail, setAuthEmail] = useState('')
+  const [showLogin, setShowLogin] = useState(false)
+  const [authBusy, setAuthBusy] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [notice, setNotice] = useState('')
 
   const tasks = useMemo(
-    () => initialTasks.map((task) => ({ ...task, status: savedStatuses[task.id] || task.status })),
-    [savedStatuses],
+    () => mergeTaskStatuses(initialTasks, remoteStatuses, savedStatuses, isSupabaseConfigured),
+    [remoteStatuses, savedStatuses],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
   const visibleTasks = useMemo(
@@ -117,12 +128,67 @@ function App() {
   const awaitingCount = currentTasks.filter((task) => task.status === 'Aguardando Lizy').length
   const resolvedCount = currentTasks.filter((task) => task.status === 'Resolvida').length
 
+  useEffect(() => {
+    if (!supabase) return undefined
+
+    let active = true
+    const load = async () => {
+      const [{ data: sessionData }, { data, error }] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase.from('task_statuses').select('task_id,status'),
+      ])
+      if (!active) return
+      setSession(sessionData.session)
+      if (error) {
+        setConnectionState('error')
+        return
+      }
+      setRemoteStatuses(statusMap(data))
+      setConnectionState('connected')
+    }
+    load()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession))
+    const channel = supabase
+      .channel('task-statuses-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_statuses' }, (payload) => {
+        const row = payload.new
+        if (row?.task_id && row?.status) {
+          setRemoteStatuses((current) => ({ ...current, [row.task_id]: row.status }))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      active = false
+      authListener.subscription.unsubscribe()
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   function flash(message) {
     setNotice(message)
     window.setTimeout(() => setNotice(''), 2600)
   }
 
-  function updateStatus(id, value) {
+  async function updateStatus(id, value) {
+    if (supabase) {
+      if (!session) {
+        setShowLogin(true)
+        flash('Entre com um e-mail autorizado para atualizar o estado.')
+        return
+      }
+      const { error } = await supabase
+        .from('task_statuses')
+        .upsert({ task_id: id, status: value, updated_by: session.user.id, updated_at: new Date().toISOString() }, { onConflict: 'task_id' })
+      if (error) {
+        flash('Não foi possível salvar o estado compartilhado.')
+        return
+      }
+      setRemoteStatuses((current) => ({ ...current, [id]: value }))
+      flash('Estado compartilhado e atualizado ao vivo.')
+      return
+    }
     const next = { ...savedStatuses, [id]: value }
     setSavedStatuses(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -133,6 +199,29 @@ function App() {
     localStorage.removeItem(STORAGE_KEY)
     setSavedStatuses({})
     flash('Estados iniciais restaurados.')
+  }
+
+  async function requestLogin(event) {
+    event.preventDefault()
+    if (!supabase || !authEmail.trim()) return
+    setAuthBusy(true)
+    const { error } = await supabase.auth.signInWithOtp({
+      email: authEmail.trim(),
+      options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
+    })
+    setAuthBusy(false)
+    if (error) {
+      flash('Este e-mail ainda não está autorizado para editar o painel.')
+      return
+    }
+    flash('Enviamos um link de acesso para o e-mail informado.')
+  }
+
+  async function signOut() {
+    if (!supabase) return
+    await supabase.auth.signOut()
+    setSession(null)
+    flash('Sessão encerrada neste dispositivo.')
   }
 
   async function copyReport() {
@@ -172,8 +261,14 @@ function App() {
           <span className="brand__copy"><strong>Elétrica Visão</strong><small>Implantação ERP Lizy</small></span>
         </a>
         <div className="topbar__meta">
+          {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
           <span className="topbar__date">Base confirmada em 25/08/2026</span>
+          {isSupabaseConfigured && (session ? (
+            <button className="session-button" onClick={signOut}><LogOut size={14} /> Sair</button>
+          ) : (
+            <button className="session-button" onClick={() => setShowLogin((visible) => !visible)}><LogIn size={14} /> Entrar para editar</button>
+          ))}
         </div>
       </header>
 
@@ -197,14 +292,25 @@ function App() {
 
         <section className="content" aria-label="Painel de acompanhamento">
           <div className="notice-card">
-            <AlertTriangle size={19} />
-            <p><strong>Critério de leitura:</strong> prioridades são uma classificação proposta pela Elétrica Visão. Alterações de estado feitas aqui ficam somente neste dispositivo; o link público sempre inicia com a base consolidada.</p>
+            {isSupabaseConfigured ? <Radio size={19} /> : <AlertTriangle size={19} />}
+            <p>{isSupabaseConfigured
+              ? <><strong>Status compartilhado:</strong> a visualização é atualizada ao vivo. Para alterar, entre com um e-mail previamente autorizado.</>
+              : <><strong>Critério de leitura:</strong> prioridades são uma classificação proposta pela Elétrica Visão. Alterações de estado feitas aqui ficam somente neste dispositivo; o link público sempre inicia com a base consolidada.</>
+            }</p>
           </div>
+
+          {showLogin && isSupabaseConfigured && !session && (
+            <form className="login-panel" onSubmit={requestLogin}>
+              <div><strong>Entrar para atualizar estados</strong><span>Use o e-mail liberado pela administração do painel.</span></div>
+              <label><span className="sr-only">E-mail autorizado</span><input type="email" required value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="seuemail@empresa.com" /></label>
+              <button type="submit" disabled={authBusy}>{authBusy ? 'Enviando…' : 'Receber link de acesso'}</button>
+            </form>
+          )}
 
           <div className="summary-grid">
             <SummaryCard icon={PackageCheck} label="Demandas atuais" value={CURRENT_TOTAL} detail="8 Almoxarifado · 5 Aquisição" />
             <SummaryCard icon={AlertTriangle} label="Prioridade crítica" value={criticalCount} detail="Classificação proposta" tone="orange" />
-            <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail="Estado local atual" tone="gold" />
+            <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail={isSupabaseConfigured ? 'Estado compartilhado' : 'Estado local atual'} tone="gold" />
             <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${CURRENT_TOTAL} demandas atuais`} tone="green" />
           </div>
 
@@ -244,7 +350,7 @@ function App() {
 
             <div className="task-table" role="table" aria-label="Solicitações filtradas">
               <div className="task-table__head" role="row">
-                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado local</span><span role="columnheader">Detalhes</span>
+                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
               </div>
               {visibleTasks.length ? visibleTasks.map((task) => (
                 <article className="task-row" role="row" key={task.id}>
@@ -257,7 +363,7 @@ function App() {
                   <div role="cell"><Badge type="sector">{task.sector}</Badge></div>
                   <div role="cell"><Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge></div>
                   <div role="cell">
-                    <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
+                    <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !session} value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
                   </div>
                   <div role="cell"><button className="detail-button" onClick={() => setSelectedId(task.id)}>Ver item <ArrowRight size={15} /></button></div>
                 </article>
@@ -267,8 +373,8 @@ function App() {
             </div>
 
             <footer className="workspace__footer">
-              <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>
-              <button onClick={resetLocalStatuses}><RotateCcw size={14} /> Restaurar estados iniciais</button>
+              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem os estados compartilhados; somente usuários autorizados podem alterá-los.</p> : <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>}
+              {!isSupabaseConfigured && <button onClick={resetLocalStatuses}><RotateCcw size={14} /> Restaurar estados iniciais</button>}
             </footer>
           </div>
 
@@ -287,7 +393,7 @@ function App() {
       </main>
 
       {notice && <div className="toast" role="status"><Check size={16} /> {notice}</div>}
-      <DetailPanel task={selectedTask} onClose={() => setSelectedId(null)} onStatusChange={updateStatus} />
+      <DetailPanel task={selectedTask} canEdit={!isSupabaseConfigured || Boolean(session)} onClose={() => setSelectedId(null)} onStatusChange={updateStatus} />
     </>
   )
 }
