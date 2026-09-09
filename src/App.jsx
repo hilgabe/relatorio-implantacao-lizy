@@ -10,8 +10,8 @@ import {
   ExternalLink,
   FileClock,
   Filter,
-  LogIn,
-  LogOut,
+  KeyRound,
+  Lock,
   PackageCheck,
   Printer,
   Radio,
@@ -105,11 +105,11 @@ function App() {
   const [priority, setPriority] = useState('')
   const [savedStatuses, setSavedStatuses] = useState(loadStatuses)
   const [remoteStatuses, setRemoteStatuses] = useState({})
-  const [session, setSession] = useState(null)
   const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
-  const [authEmail, setAuthEmail] = useState('')
-  const [showLogin, setShowLogin] = useState(false)
-  const [authBusy, setAuthBusy] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
+  const [isEditorUnlocked, setIsEditorUnlocked] = useState(false)
+  const [showCodePrompt, setShowCodePrompt] = useState(false)
+  const [codeBusy, setCodeBusy] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [notice, setNotice] = useState('')
 
@@ -133,12 +133,8 @@ function App() {
 
     let active = true
     const load = async () => {
-      const [{ data: sessionData }, { data, error }] = await Promise.all([
-        supabase.auth.getSession(),
-        supabase.from('task_statuses').select('task_id,status'),
-      ])
+      const { data, error } = await supabase.from('task_statuses').select('task_id,status')
       if (!active) return
-      setSession(sessionData.session)
       if (error) {
         setConnectionState('error')
         return
@@ -148,7 +144,6 @@ function App() {
     }
     load()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession))
     const channel = supabase
       .channel('task-statuses-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_statuses' }, (payload) => {
@@ -161,7 +156,6 @@ function App() {
 
     return () => {
       active = false
-      authListener.subscription.unsubscribe()
       supabase.removeChannel(channel)
     }
   }, [])
@@ -173,15 +167,20 @@ function App() {
 
   async function updateStatus(id, value) {
     if (supabase) {
-      if (!session) {
-        setShowLogin(true)
-        flash('Entre com um e-mail autorizado para atualizar o estado.')
+      if (!isEditorUnlocked || !accessCode) {
+        setShowCodePrompt(true)
+        flash('Informe o código de acesso para alterar os estados.')
         return
       }
-      const { error } = await supabase
-        .from('task_statuses')
-        .upsert({ task_id: id, status: value, updated_by: session.user.id, updated_at: new Date().toISOString() }, { onConflict: 'task_id' })
+      const { error } = await supabase.rpc('update_task_status', {
+        p_task_id: id,
+        p_status: value,
+        p_code: accessCode,
+      })
       if (error) {
+        setIsEditorUnlocked(false)
+        setAccessCode('')
+        setShowCodePrompt(true)
         flash('Não foi possível salvar o estado compartilhado.')
         return
       }
@@ -201,27 +200,27 @@ function App() {
     flash('Estados iniciais restaurados.')
   }
 
-  async function requestLogin(event) {
+  async function unlockEditing(event) {
     event.preventDefault()
-    if (!supabase || !authEmail.trim()) return
-    setAuthBusy(true)
-    const { error } = await supabase.auth.signInWithOtp({
-      email: authEmail.trim(),
-      options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
-    })
-    setAuthBusy(false)
-    if (error) {
-      flash('Este e-mail ainda não está autorizado para editar o painel.')
+    if (!supabase || accessCode.length !== 4) return
+    setCodeBusy(true)
+    const { data, error } = await supabase.rpc('verify_status_code', { p_code: accessCode })
+    setCodeBusy(false)
+    if (error || data !== true) {
+      setAccessCode('')
+      flash('Código incorreto. Tente novamente.')
       return
     }
-    flash('Enviamos um link de acesso para o e-mail informado.')
+    setIsEditorUnlocked(true)
+    setShowCodePrompt(false)
+    flash('Edição liberada neste dispositivo.')
   }
 
-  async function signOut() {
-    if (!supabase) return
-    await supabase.auth.signOut()
-    setSession(null)
-    flash('Sessão encerrada neste dispositivo.')
+  function lockEditing() {
+    setAccessCode('')
+    setIsEditorUnlocked(false)
+    setShowCodePrompt(false)
+    flash('Edição bloqueada neste dispositivo.')
   }
 
   async function copyReport() {
@@ -264,10 +263,10 @@ function App() {
           {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
           <span className="topbar__date">Base confirmada em 25/08/2026</span>
-          {isSupabaseConfigured && (session ? (
-            <button className="session-button" onClick={signOut}><LogOut size={14} /> Sair</button>
+          {isSupabaseConfigured && (isEditorUnlocked ? (
+            <button className="session-button" onClick={lockEditing}><Lock size={14} /> Bloquear edição</button>
           ) : (
-            <button className="session-button" onClick={() => setShowLogin((visible) => !visible)}><LogIn size={14} /> Entrar para editar</button>
+            <button className="session-button" onClick={() => setShowCodePrompt((visible) => !visible)}><KeyRound size={14} /> Liberar edição</button>
           ))}
         </div>
       </header>
@@ -294,16 +293,16 @@ function App() {
           <div className="notice-card">
             {isSupabaseConfigured ? <Radio size={19} /> : <AlertTriangle size={19} />}
             <p>{isSupabaseConfigured
-              ? <><strong>Status compartilhado:</strong> a visualização é atualizada ao vivo. Para alterar, entre com um e-mail previamente autorizado.</>
+              ? <><strong>Status compartilhado:</strong> a visualização é atualizada ao vivo. Para alterar, libere a edição com o código compartilhado.</>
               : <><strong>Critério de leitura:</strong> prioridades são uma classificação proposta pela Elétrica Visão. Alterações de estado feitas aqui ficam somente neste dispositivo; o link público sempre inicia com a base consolidada.</>
             }</p>
           </div>
 
-          {showLogin && isSupabaseConfigured && !session && (
-            <form className="login-panel" onSubmit={requestLogin}>
-              <div><strong>Entrar para atualizar estados</strong><span>Use o e-mail liberado pela administração do painel.</span></div>
-              <label><span className="sr-only">E-mail autorizado</span><input type="email" required value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} placeholder="seuemail@empresa.com" /></label>
-              <button type="submit" disabled={authBusy}>{authBusy ? 'Enviando…' : 'Receber link de acesso'}</button>
+          {showCodePrompt && isSupabaseConfigured && !isEditorUnlocked && (
+            <form className="login-panel" onSubmit={unlockEditing}>
+              <div><strong>Liberar alteração de estados</strong><span>Digite o código compartilhado de quatro números.</span></div>
+              <label><span className="sr-only">Código de acesso</span><input type="password" inputMode="numeric" autoComplete="off" required minLength="4" maxLength="4" pattern="[0-9]{4}" value={accessCode} onChange={(event) => setAccessCode(event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="••••" /></label>
+              <button type="submit" disabled={codeBusy || accessCode.length !== 4}>{codeBusy ? 'Verificando…' : 'Liberar edição'}</button>
             </form>
           )}
 
@@ -363,7 +362,7 @@ function App() {
                   <div role="cell"><Badge type="sector">{task.sector}</Badge></div>
                   <div role="cell"><Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge></div>
                   <div role="cell">
-                    <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !session} value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
+                    <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !isEditorUnlocked} value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
                   </div>
                   <div role="cell"><button className="detail-button" onClick={() => setSelectedId(task.id)}>Ver item <ArrowRight size={15} /></button></div>
                 </article>
@@ -373,7 +372,7 @@ function App() {
             </div>
 
             <footer className="workspace__footer">
-              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem os estados compartilhados; somente usuários autorizados podem alterá-los.</p> : <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>}
+              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem os estados compartilhados; a alteração exige o código de acesso.</p> : <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>}
               {!isSupabaseConfigured && <button onClick={resetLocalStatuses}><RotateCcw size={14} /> Restaurar estados iniciais</button>}
             </footer>
           </div>
@@ -393,7 +392,7 @@ function App() {
       </main>
 
       {notice && <div className="toast" role="status"><Check size={16} /> {notice}</div>}
-      <DetailPanel task={selectedTask} canEdit={!isSupabaseConfigured || Boolean(session)} onClose={() => setSelectedId(null)} onStatusChange={updateStatus} />
+      <DetailPanel task={selectedTask} canEdit={!isSupabaseConfigured || isEditorUnlocked} onClose={() => setSelectedId(null)} onStatusChange={updateStatus} />
     </>
   )
 }
