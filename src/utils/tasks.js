@@ -12,6 +12,7 @@ export function filterTasks(tasks, filters) {
     if (filters.sector && task.sector !== filters.sector) return false
     if (filters.status && task.status !== filters.status) return false
     if (filters.priority && task.priority !== filters.priority) return false
+    if (filters.owner && (task.owner || 'Não informado') !== filters.owner) return false
     if (!query) return true
     const haystack = normalizeText(Object.values(task).join(' '))
     return query.split(/\s+/).every((term) => haystack.includes(term))
@@ -28,12 +29,13 @@ export function buildReportText(tasks, generatedAt = new Date()) {
   tasks.forEach((task) => {
     lines.push(
       `${task.id} — ${task.title}`,
-      `Setor: ${task.sector} | Prioridade proposta: ${task.priority} | Estado: ${task.status}`,
+      `Setor: ${task.sector} | Responsável: ${task.owner || 'Não informado'} | Prioridade proposta: ${task.priority} | Estado: ${task.status}`,
       `Solicitação: ${task.description}`,
       `Origem: ${task.origin}`,
       `Evidência/referência: ${task.evidence}`,
       `Impacto observado/proposto: ${task.impact}`,
       `Próximo passo sugerido: ${task.nextStep}`,
+      task.attachments?.length ? `Anexos: ${task.attachments.map((attachment) => attachment.caption).join(' | ')}` : 'Anexos: nenhum',
       '',
     )
   })

@@ -13,16 +13,18 @@ import {
   KeyRound,
   Lock,
   PackageCheck,
+  Paperclip,
   Printer,
   Radio,
   RotateCcw,
   Search,
   ShieldCheck,
   ShoppingCart,
+  UserRound,
   Warehouse,
   X,
 } from 'lucide-react'
-import { CURRENT_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
+import { CURRENT_TOTAL, HISTORY_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { mergeTaskStatuses, statusMap } from './lib/statuses'
 import { buildReportText, filterTasks } from './utils/tasks'
@@ -83,11 +85,25 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
           </div>
 
           <dl className="detail-list">
+            <div><dt>Responsável</dt><dd>{task.owner || 'Não informado'}</dd></div>
             <div><dt>Origem</dt><dd>{task.origin}</dd></div>
             <div><dt>Evidência / referência</dt><dd>{task.evidence}</dd></div>
             <div><dt>Impacto</dt><dd>{task.impact}</dd></div>
             <div className="detail-list__next"><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd></div>
           </dl>
+          {task.attachments?.length > 0 && (
+            <section className="attachments" aria-labelledby="attachments-title">
+              <div className="attachments__heading"><Paperclip size={17} /><h3 id="attachments-title">Anexos de referência</h3></div>
+              <div className="attachments__grid">
+                {task.attachments.map((attachment) => (
+                  <a key={attachment.src} href={attachment.src} target="_blank" rel="noreferrer" className="attachment-card">
+                    <img src={attachment.src} alt={attachment.alt} />
+                    <span>{attachment.caption}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
           {task.scope === 'history' && (
             <div className="warning-box"><AlertTriangle size={18} /><p>Item histórico. Requer revalidação antes de ser tratado como comportamento atual do Lizy.</p></div>
           )}
@@ -103,6 +119,7 @@ function App() {
   const [sector, setSector] = useState('')
   const [status, setStatus] = useState('')
   const [priority, setPriority] = useState('')
+  const [owner, setOwner] = useState('')
   const [savedStatuses, setSavedStatuses] = useState(loadStatuses)
   const [remoteStatuses, setRemoteStatuses] = useState({})
   const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
@@ -118,9 +135,10 @@ function App() {
     [remoteStatuses, savedStatuses],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
+  const owners = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.owner || 'Não informado'))], [tasks, scope])
   const visibleTasks = useMemo(
-    () => filterTasks(tasks, { scope, query, sector, status, priority }),
-    [tasks, scope, query, sector, status, priority],
+    () => filterTasks(tasks, { scope, query, sector, status, priority, owner }),
+    [tasks, scope, query, sector, status, priority, owner],
   )
   const selectedTask = tasks.find((task) => task.id === selectedId)
   const currentTasks = tasks.filter((task) => task.scope === 'current')
@@ -233,8 +251,8 @@ function App() {
   }
 
   function exportCsv() {
-    const headers = ['ID', 'Título', 'Descrição', 'Setor', 'Prioridade proposta', 'Estado', 'Origem', 'Evidência', 'Impacto', 'Próximo passo']
-    const rows = visibleTasks.map((task) => [task.id, task.title, task.description, task.sector, task.priority, task.status, task.origin, task.evidence, task.impact, task.nextStep])
+    const headers = ['ID', 'Título', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
+    const rows = visibleTasks.map((task) => [task.id, task.title, task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(';')).join('\n')
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
     const link = document.createElement('a')
@@ -250,6 +268,7 @@ function App() {
     setSector('')
     setStatus('')
     setPriority('')
+    setOwner('')
   }
 
   return (
@@ -262,7 +281,7 @@ function App() {
         <div className="topbar__meta">
           {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
-          <span className="topbar__date">Base confirmada em 25/08/2026</span>
+          <span className="topbar__date">Base atualizada em 10/09/2026</span>
           {isSupabaseConfigured && (isEditorUnlocked ? (
             <button className="session-button" onClick={lockEditing}><Lock size={14} /> Bloquear edição</button>
           ) : (
@@ -276,7 +295,7 @@ function App() {
           <div className="hero__content">
             <span className="eyebrow eyebrow--light">Elétrica Visão × Lizy</span>
             <h1>Painel de solicitações da implantação</h1>
-            <p>Visão consolidada das pendências enviadas pelo Almoxarifado e pela Aquisição, com histórico técnico separado para revalidação.</p>
+            <p>Visão consolidada das pendências de Almoxarifado, Aquisição e Comercial, com responsáveis, anexos e histórico técnico separado para revalidação.</p>
             <div className="hero__actions">
               <button className="button button--light" onClick={() => window.print()}><Printer size={17} /> Imprimir relatório</button>
               <button className="button button--ghost" onClick={copyReport}><ClipboardCopy size={17} /> Copiar resumo</button>
@@ -307,7 +326,7 @@ function App() {
           )}
 
           <div className="summary-grid">
-            <SummaryCard icon={PackageCheck} label="Demandas atuais" value={CURRENT_TOTAL} detail="8 Almoxarifado · 5 Aquisição" />
+            <SummaryCard icon={PackageCheck} label="Demandas atuais" value={CURRENT_TOTAL} detail="8 Almoxarifado · 5 Aquisição · 3 Comercial" />
             <SummaryCard icon={AlertTriangle} label="Prioridade crítica" value={criticalCount} detail="Classificação proposta" tone="orange" />
             <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail={isSupabaseConfigured ? 'Estado compartilhado' : 'Estado local atual'} tone="gold" />
             <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${CURRENT_TOTAL} demandas atuais`} tone="green" />
@@ -327,29 +346,30 @@ function App() {
                 <BarChart3 size={17} /> Demandas atuais <span>{CURRENT_TOTAL}</span>
               </button>
               <button role="tab" aria-selected={scope === 'history'} className={scope === 'history' ? 'active' : ''} onClick={() => { setScope('history'); setSector('') }}>
-                <FileClock size={17} /> Histórico · requer revalidação <span>3</span>
+                <FileClock size={17} /> Histórico · requer revalidação <span>{HISTORY_TOTAL}</span>
               </button>
             </div>
 
             {scope === 'history' && (
-              <div className="history-banner"><FileClock size={18} /><p><strong>Histórico — requer revalidação.</strong> Estes registros não fazem parte das 13 demandas atuais e não comprovam o comportamento atual do sistema.</p></div>
+              <div className="history-banner"><FileClock size={18} /><p><strong>Histórico — requer revalidação.</strong> Estes registros não fazem parte das {CURRENT_TOTAL} demandas atuais e não comprovam o comportamento atual do sistema.</p></div>
             )}
 
             <div className="filters">
               <label className="search-box">
                 <span className="sr-only">Pesquisar</span><Search size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por texto, OS, RE ou identificador..." />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por texto, OS, RE, CNPJ, código ou identificador..." />
                 {query && <button onClick={() => setQuery('')} aria-label="Limpar pesquisa"><X size={16} /></button>}
               </label>
               <label className="select-wrap"><span className="sr-only">Filtrar setor</span><select value={sector} onChange={(event) => setSector(event.target.value)}><option value="">Todos os setores</option>{sectors.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
+              <label className="select-wrap"><span className="sr-only">Filtrar responsável</span><select value={owner} onChange={(event) => setOwner(event.target.value)}><option value="">Todos os responsáveis</option>{owners.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os estados</option>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar prioridade</span><select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Todas as prioridades</option>{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
-              {(query || sector || status || priority) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
+              {(query || sector || status || priority || owner) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
             </div>
 
             <div className="task-table" role="table" aria-label="Solicitações filtradas">
               <div className="task-table__head" role="row">
-                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
+                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
               </div>
               {visibleTasks.length ? visibleTasks.map((task) => (
                 <article className="task-row" role="row" key={task.id}>
@@ -360,6 +380,7 @@ function App() {
                     <small><ExternalLink size={13} /> {task.evidence}</small>
                   </div>
                   <div role="cell"><Badge type="sector">{task.sector}</Badge></div>
+                  <div className="owner-cell" role="cell"><UserRound size={14} /> {task.owner || 'Não informado'}</div>
                   <div role="cell"><Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge></div>
                   <div role="cell">
                     <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !isEditorUnlocked} value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
@@ -380,14 +401,15 @@ function App() {
           <section className="source-strip" aria-label="Origem dos dados">
             <div><Warehouse size={20} /><span><strong>8 itens</strong>Almoxarifado</span></div>
             <div><ShoppingCart size={20} /><span><strong>5 itens</strong>Aquisição</span></div>
-            <div><FileClock size={20} /><span><strong>3 registros</strong>Histórico a revalidar</span></div>
-            <p>Última consolidação<br /><strong>25 de agosto de 2026</strong></p>
+            <div><UserRound size={20} /><span><strong>3 itens</strong>Comercial · Alice</span></div>
+            <div><FileClock size={20} /><span><strong>{HISTORY_TOTAL} registros</strong>Histórico a revalidar</span></div>
+            <p>Última consolidação<br /><strong>10 de setembro de 2026</strong></p>
           </section>
         </section>
 
         <section className="print-report" aria-hidden="true">
-          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 25/08/2026</p></header>
-          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2><p><strong>{task.sector} · prioridade proposta {task.priority} · {task.status}</strong></p><p>{task.description}</p><dl><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd></dl></article>)}
+          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 10/09/2026</p></header>
+          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2><p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status}</strong></p><p>{task.description}</p><dl><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
         </section>
       </main>
 

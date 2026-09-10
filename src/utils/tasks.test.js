@@ -3,9 +3,9 @@ import { tasks } from '../data/tasks'
 import { buildReportText, filterTasks, normalizeText } from './tasks'
 
 describe('base de solicitações', () => {
-  it('mantém 13 demandas atuais e o histórico separado', () => {
-    expect(tasks.filter((task) => task.scope === 'current')).toHaveLength(13)
-    expect(tasks.filter((task) => task.scope === 'history')).toHaveLength(3)
+  it('mantém 16 demandas atuais e o histórico separado', () => {
+    expect(tasks.filter((task) => task.scope === 'current')).toHaveLength(16)
+    expect(tasks.filter((task) => task.scope === 'history')).toHaveLength(2)
   })
 
   it('mantém identificadores únicos e todos os campos mínimos', () => {
@@ -25,6 +25,11 @@ describe('filtros e relatório', () => {
   it('combina filtros de escopo, setor, estado e prioridade', () => {
     const result = filterTasks(tasks, { scope: 'current', query: '', sector: 'Almoxarifado', status: 'Aguardando Lizy', priority: 'Crítica' })
     expect(result.map((task) => task.id)).toEqual(['ALM-002', 'ALM-007'])
+  })
+
+  it('filtra as solicitações atribuídas à Alice', () => {
+    const result = filterTasks(tasks, { scope: 'current', query: '', sector: '', status: '', priority: '', owner: 'Alice' })
+    expect(result.map((task) => task.id)).toEqual(['COM-001', 'COM-002', 'COM-003'])
   })
 
   it('gera texto compartilhável com origem e próximo passo', () => {

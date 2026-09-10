@@ -4,6 +4,7 @@ export const PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa']
 const almoxarifado = 'Almoxarifado - arquivo recebido'
 const aquisicao = 'Aquisição - arquivo recebido'
 const historico = 'Histórico da implantação - requer revalidação'
+const comercial = 'Solicitações comerciais recebidas em 10/09/2026'
 
 export const tasks = [
   {
@@ -124,13 +125,36 @@ export const tasks = [
     nextStep: 'Definir campos, filtros, totais e formato de exportação do relatório mensal.', scope: 'current',
   },
   {
-    id: 'HIS-001',
-    title: 'Revalidar ajustes comerciais',
-    description: 'Revalidar a remoção da linha de cor/peso da proposta, a apresentação de quantidade e valor total dos serviços e a busca de cliente por CNPJ e código.',
-    sector: 'Comercial', priority: 'Média', status: 'Em análise', origin: historico,
-    evidence: 'Relatório histórico de solicitações de ajustes, 21/08/2026.',
-    impact: 'Os três pontos foram registrados anteriormente, mas o estado atual do sistema não foi reconfirmado.',
-    nextStep: 'Reproduzir cada ponto na versão atual do Lizy e registrar o resultado separadamente.', scope: 'history',
+    id: 'COM-001',
+    title: 'Remover a linha de Cor e Peso da proposta comercial',
+    description: 'Na seção “Entrada de Equipamento” da proposta comercial, retirar somente a linha com os campos Cor e Peso. Manter os demais dados da seção e o restante do layout.',
+    sector: 'Comercial', owner: 'Alice', priority: 'Média', status: 'Aguardando Lizy', origin: comercial,
+    evidence: 'Anexo 1 destaca a linha de Cor e Peso que deve ser retirada.',
+    impact: 'Os campos não são necessários no documento comercial e ocupam espaço no layout.',
+    nextStep: 'Ajustar o template da proposta comercial e validar uma proposta gerada, confirmando que apenas a linha Cor/Peso foi removida.',
+    attachments: [{ src: '/anexos/proposta-comercial-remover-cor-peso.png', alt: 'Proposta comercial com a linha Cor e Peso destacada para remoção', caption: 'Anexo 1 — retirar a linha de Cor e Peso' }],
+    scope: 'current',
+  },
+  {
+    id: 'COM-002',
+    title: 'Exibir apenas um valor total na tabela de Serviços',
+    description: 'Na tabela de Serviços da proposta comercial, remover o valor unitário e apresentar uma única coluna de valor total. A alteração deve valer somente para Serviços, sem modificar a tabela de Produtos.',
+    sector: 'Comercial', owner: 'Alice', priority: 'Alta', status: 'Aguardando Lizy', origin: comercial,
+    evidence: 'Anexo 2 demonstra a unificação desejada na área de valores da tabela de Serviços.',
+    impact: 'O layout atual apresenta valor unitário desnecessário e não corresponde à forma desejada de exibir o preço dos serviços.',
+    nextStep: 'Ajustar exclusivamente o bloco de Serviços e validar que cada linha e o fechamento exibem apenas o total, preservando Produtos sem alterações.',
+    attachments: [{ src: '/anexos/proposta-comercial-servicos-valor-total.png', alt: 'Tabela de Serviços com indicação para exibir somente o valor total', caption: 'Anexo 2 — manter somente o valor total em Serviços' }],
+    scope: 'current',
+  },
+  {
+    id: 'COM-003',
+    title: 'Pesquisar cliente ou fornecedor por CNPJ e código',
+    description: 'Permitir a pesquisa de clientes e fornecedores tanto pelo CNPJ quanto pelo código cadastral em qualquer módulo que possua seleção ou consulta dessas entidades.',
+    sector: 'Comercial', owner: 'Alice', priority: 'Alta', status: 'Aguardando Lizy', origin: comercial,
+    evidence: 'Solicitação funcional informada em 10/09/2026; não foi fornecido print específico para este item.',
+    impact: 'A busca apenas pelos campos atuais dificulta localizar rapidamente o cadastro correto durante a operação.',
+    nextStep: 'Mapear todos os seletores de cliente/fornecedor, habilitar busca por CNPJ e código e testar os dois critérios em cada módulo aplicável.',
+    scope: 'current',
   },
   {
     id: 'HIS-002',
@@ -153,3 +177,4 @@ export const tasks = [
 ]
 
 export const CURRENT_TOTAL = tasks.filter((task) => task.scope === 'current').length
+export const HISTORY_TOTAL = tasks.filter((task) => task.scope === 'history').length

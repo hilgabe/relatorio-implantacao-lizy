@@ -1,6 +1,6 @@
 # Implantação do ERP Lizy — Elétrica Visão
 
-Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 13 demandas atuais de Almoxarifado e Aquisição e mantém o histórico da implantação em uma seção separada, marcada para revalidação.
+Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 16 demandas atuais de Almoxarifado, Aquisição e Comercial e mantém o histórico da implantação em uma seção separada, marcada para revalidação.
 
 ## Painel web
 
