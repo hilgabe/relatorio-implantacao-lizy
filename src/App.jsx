@@ -9,6 +9,7 @@ import {
   Download,
   ExternalLink,
   FileClock,
+  FilePlus2,
   Filter,
   KeyRound,
   Lock,
@@ -24,7 +25,8 @@ import {
   Warehouse,
   X,
 } from 'lucide-react'
-import { CURRENT_TOTAL, HISTORY_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
+import { HISTORY_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
+import { mapCustomTask, upsertCustomTask } from './lib/requests'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { mergeTaskStatuses, statusMap } from './lib/statuses'
 import { buildReportText, filterTasks } from './utils/tasks'
@@ -97,7 +99,9 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
               <div className="attachments__grid">
                 {task.attachments.map((attachment) => (
                   <a key={attachment.src} href={attachment.src} target="_blank" rel="noreferrer" className="attachment-card">
-                    <img src={attachment.src} alt={attachment.alt} />
+                    {attachment.preview === false
+                      ? <span className="attachment-card__link"><ExternalLink size={18} /> Abrir arquivo ou link de referência</span>
+                      : <img src={attachment.src} alt={attachment.alt} />}
                     <span>{attachment.caption}</span>
                   </a>
                 ))}
@@ -113,6 +117,48 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
   )
 }
 
+function RequestForm({ busy, onSubmit, onView, success }) {
+  return (
+    <section className="request-form-wrap" aria-labelledby="request-form-title">
+      <div className="request-intro">
+        <div className="request-intro__icon"><FilePlus2 size={24} /></div>
+        <div>
+          <h3 id="request-form-title">Abrir uma nova solicitação</h3>
+          <p>Descreva a necessidade com informações suficientes para a equipe entender, reproduzir e validar o pedido.</p>
+        </div>
+      </div>
+
+      <div className="public-warning"><AlertTriangle size={18} /><p><strong>Conteúdo compartilhado:</strong> a solicitação aparecerá no painel público. Não informe senhas, dados pessoais, valores sigilosos ou documentos confidenciais.</p></div>
+
+      {success && (
+        <div className="request-success" role="status">
+          <Check size={20} />
+          <div><strong>{success.id} criada com sucesso</strong><span>A demanda já está disponível para acompanhamento.</span></div>
+          <button type="button" onClick={onView}>Ver solicitação <ArrowRight size={15} /></button>
+        </div>
+      )}
+
+      <form className="request-form" onSubmit={onSubmit}>
+        <div className="form-grid">
+          <label className="form-field form-field--wide"><span>Título da solicitação *</span><input name="title" required minLength="5" maxLength="120" placeholder="Ex.: Ajustar informações da proposta comercial" /></label>
+          <label className="form-field"><span>Seu nome *</span><input name="requester" required minLength="2" maxLength="100" placeholder="Quem está solicitando" /></label>
+          <label className="form-field"><span>Setor ou módulo *</span><input name="sector" required minLength="2" maxLength="80" list="sector-options" placeholder="Ex.: Comercial" /><datalist id="sector-options"><option value="Almoxarifado" /><option value="Aquisição" /><option value="Comercial" /><option value="Financeiro" /><option value="Peritagem" /><option value="PCP" /><option value="Produção" /></datalist></label>
+          <label className="form-field"><span>Responsável *</span><input name="owner" required minLength="2" maxLength="100" list="owner-options" defaultValue="A definir" /><datalist id="owner-options"><option value="Alice" /><option value="Equipe Lizy" /><option value="A definir" /></datalist></label>
+          <label className="form-field"><span>Prioridade sugerida *</span><select name="priority" required defaultValue="Média">{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="form-field form-field--full"><span>Descrição e contexto *</span><textarea name="description" required minLength="10" maxLength="2000" rows="5" placeholder="Explique onde acontece, como funciona hoje e o que precisa ser alterado." /></label>
+          <label className="form-field form-field--full"><span>Impacto do problema *</span><textarea name="impact" required minLength="5" maxLength="1000" rows="3" placeholder="Explique o que essa situação dificulta ou impede na operação." /></label>
+          <label className="form-field form-field--full"><span>Resultado esperado *</span><textarea name="expectedResult" required minLength="5" maxLength="1500" rows="3" placeholder="Descreva como deve ficar e, se houver, o que não deve ser alterado." /></label>
+          <label className="form-field"><span>Referência</span><input name="reference" maxLength="500" placeholder="OS, RE, tela, cliente ou outro exemplo" /></label>
+          <label className="form-field"><span>Link de anexo</span><input name="attachmentUrl" type="url" maxLength="1000" placeholder="https://drive.google.com/..." /><small>Opcional: cole um link acessível para print ou documento.</small></label>
+          <label className="form-field form-field--code"><span>Código de acesso *</span><input name="code" type="password" inputMode="numeric" autoComplete="off" required minLength="4" maxLength="4" pattern="[0-9]{4}" placeholder="••••" /><small>O mesmo código usado para editar os estados.</small></label>
+        </div>
+        <label className="public-ack"><input type="checkbox" required /> Confirmo que revisei o pedido e que ele não contém informações confidenciais.</label>
+        <div className="request-form__actions"><button className="button button--submit" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Adicionar solicitação'} <ArrowRight size={16} /></button></div>
+      </form>
+    </section>
+  )
+}
+
 function App() {
   const [scope, setScope] = useState('current')
   const [query, setQuery] = useState('')
@@ -122,6 +168,7 @@ function App() {
   const [owner, setOwner] = useState('')
   const [savedStatuses, setSavedStatuses] = useState(loadStatuses)
   const [remoteStatuses, setRemoteStatuses] = useState({})
+  const [customRows, setCustomRows] = useState([])
   const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
   const [accessCode, setAccessCode] = useState('')
   const [isEditorUnlocked, setIsEditorUnlocked] = useState(false)
@@ -129,10 +176,13 @@ function App() {
   const [codeBusy, setCodeBusy] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [notice, setNotice] = useState('')
+  const [requestBusy, setRequestBusy] = useState(false)
+  const [requestSuccess, setRequestSuccess] = useState(null)
 
+  const customTasks = useMemo(() => customRows.map(mapCustomTask), [customRows])
   const tasks = useMemo(
-    () => mergeTaskStatuses(initialTasks, remoteStatuses, savedStatuses, isSupabaseConfigured),
-    [remoteStatuses, savedStatuses],
+    () => mergeTaskStatuses([...initialTasks, ...customTasks], remoteStatuses, savedStatuses, isSupabaseConfigured),
+    [customTasks, remoteStatuses, savedStatuses],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
   const owners = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.owner || 'Não informado'))], [tasks, scope])
@@ -142,6 +192,7 @@ function App() {
   )
   const selectedTask = tasks.find((task) => task.id === selectedId)
   const currentTasks = tasks.filter((task) => task.scope === 'current')
+  const currentTotal = currentTasks.length
   const criticalCount = currentTasks.filter((task) => task.priority === 'Crítica').length
   const awaitingCount = currentTasks.filter((task) => task.status === 'Aguardando Lizy').length
   const resolvedCount = currentTasks.filter((task) => task.status === 'Resolvida').length
@@ -151,13 +202,17 @@ function App() {
 
     let active = true
     const load = async () => {
-      const { data, error } = await supabase.from('task_statuses').select('task_id,status')
+      const [statusesResult, requestsResult] = await Promise.all([
+        supabase.from('task_statuses').select('task_id,status'),
+        supabase.from('custom_tasks').select('*').order('created_at', { ascending: false }),
+      ])
       if (!active) return
-      if (error) {
+      if (statusesResult.error || requestsResult.error) {
         setConnectionState('error')
         return
       }
-      setRemoteStatuses(statusMap(data))
+      setRemoteStatuses(statusMap(statusesResult.data))
+      setCustomRows(requestsResult.data || [])
       setConnectionState('connected')
     }
     load()
@@ -169,6 +224,9 @@ function App() {
         if (row?.task_id && row?.status) {
           setRemoteStatuses((current) => ({ ...current, [row.task_id]: row.status }))
         }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'custom_tasks' }, (payload) => {
+        if (payload.new?.id) setCustomRows((current) => upsertCustomTask(current, payload.new))
       })
       .subscribe()
 
@@ -271,6 +329,56 @@ function App() {
     setOwner('')
   }
 
+  function openRequestForm() {
+    setScope('create')
+    clearFilters()
+    window.requestAnimationFrame(() => document.getElementById('solicitacoes')?.scrollIntoView({ behavior: 'smooth' }))
+  }
+
+  async function createRequest(event) {
+    event.preventDefault()
+    if (!supabase) {
+      flash('O cadastro compartilhado não está disponível neste ambiente.')
+      return
+    }
+
+    const form = event.currentTarget
+    const values = new FormData(form)
+    setRequestBusy(true)
+    const { data, error } = await supabase.rpc('create_task_request', {
+      p_title: values.get('title'),
+      p_description: values.get('description'),
+      p_sector: values.get('sector'),
+      p_requester: values.get('requester'),
+      p_owner: values.get('owner'),
+      p_priority: values.get('priority'),
+      p_reference: values.get('reference'),
+      p_impact: values.get('impact'),
+      p_expected_result: values.get('expectedResult'),
+      p_attachment_url: values.get('attachmentUrl'),
+      p_code: values.get('code'),
+    })
+    setRequestBusy(false)
+
+    if (error || !data?.id) {
+      const codeField = form.elements.namedItem('code')
+      if (codeField) codeField.value = ''
+      flash(error?.code === '28000' ? 'Código incorreto. Revise e tente novamente.' : 'Não foi possível adicionar a solicitação.')
+      return
+    }
+
+    setCustomRows((current) => upsertCustomTask(current, data))
+    setRequestSuccess(mapCustomTask(data))
+    form.reset()
+    flash(`${data.id} adicionada ao painel.`)
+  }
+
+  function viewCreatedRequest() {
+    if (!requestSuccess) return
+    setScope('current')
+    setSelectedId(requestSuccess.id)
+  }
+
   return (
     <>
       <header className="topbar">
@@ -297,13 +405,14 @@ function App() {
             <h1>Painel de solicitações da implantação</h1>
             <p>Visão consolidada das pendências de Almoxarifado, Aquisição e Comercial, com responsáveis, anexos e histórico técnico separado para revalidação.</p>
             <div className="hero__actions">
-              <button className="button button--light" onClick={() => window.print()}><Printer size={17} /> Imprimir relatório</button>
+              <button className="button button--light" onClick={openRequestForm}><FilePlus2 size={18} /> Abrir solicitação</button>
+              <button className="button button--ghost" onClick={() => window.print()}><Printer size={17} /> Imprimir relatório</button>
               <button className="button button--ghost" onClick={copyReport}><ClipboardCopy size={17} /> Copiar resumo</button>
               <button className="button button--ghost" onClick={exportCsv}><Download size={17} /> Exportar CSV</button>
             </div>
           </div>
-          <div className="hero__signal" aria-label={`${CURRENT_TOTAL} demandas atuais`}>
-            <div className="signal-ring"><strong>{CURRENT_TOTAL}</strong><span>demandas<br />atuais</span></div>
+          <div className="hero__signal" aria-label={`${currentTotal} demandas atuais`}>
+            <div className="signal-ring"><strong>{currentTotal}</strong><span>demandas<br />atuais</span></div>
             <p><span></span> Base pronta para acompanhamento</p>
           </div>
         </section>
@@ -326,35 +435,40 @@ function App() {
           )}
 
           <div className="summary-grid">
-            <SummaryCard icon={PackageCheck} label="Demandas atuais" value={CURRENT_TOTAL} detail="8 Almoxarifado · 5 Aquisição · 3 Comercial" />
+            <SummaryCard icon={PackageCheck} label="Demandas atuais" value={currentTotal} detail={`${customRows.length} abertas pelo painel`} />
             <SummaryCard icon={AlertTriangle} label="Prioridade crítica" value={criticalCount} detail="Classificação proposta" tone="orange" />
             <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail={isSupabaseConfigured ? 'Estado compartilhado' : 'Estado local atual'} tone="gold" />
-            <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${CURRENT_TOTAL} demandas atuais`} tone="green" />
+            <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${currentTotal} demandas atuais`} tone="green" />
           </div>
 
-          <div className="workspace">
+          <div className="workspace" id="solicitacoes">
             <div className="section-heading">
               <div>
                 <span className="eyebrow">Relatório vivo</span>
-                <h2>Solicitações e pendências</h2>
+                <h2>{scope === 'create' ? 'Formulário de solicitação' : 'Solicitações e pendências'}</h2>
               </div>
-              <span className="result-count">{visibleTasks.length} {visibleTasks.length === 1 ? 'item exibido' : 'itens exibidos'}</span>
+              {scope !== 'create' && <span className="result-count">{visibleTasks.length} {visibleTasks.length === 1 ? 'item exibido' : 'itens exibidos'}</span>}
             </div>
 
             <div className="tabs" role="tablist" aria-label="Tipo de solicitação">
               <button role="tab" aria-selected={scope === 'current'} className={scope === 'current' ? 'active' : ''} onClick={() => { setScope('current'); setSector('') }}>
-                <BarChart3 size={17} /> Demandas atuais <span>{CURRENT_TOTAL}</span>
+                <BarChart3 size={17} /> Demandas atuais <span>{currentTotal}</span>
               </button>
               <button role="tab" aria-selected={scope === 'history'} className={scope === 'history' ? 'active' : ''} onClick={() => { setScope('history'); setSector('') }}>
                 <FileClock size={17} /> Histórico · requer revalidação <span>{HISTORY_TOTAL}</span>
               </button>
+              <button role="tab" aria-selected={scope === 'create'} className={scope === 'create' ? 'active' : ''} onClick={openRequestForm}>
+                <FilePlus2 size={17} /> Abrir solicitação
+              </button>
             </div>
 
             {scope === 'history' && (
-              <div className="history-banner"><FileClock size={18} /><p><strong>Histórico — requer revalidação.</strong> Estes registros não fazem parte das {CURRENT_TOTAL} demandas atuais e não comprovam o comportamento atual do sistema.</p></div>
+              <div className="history-banner"><FileClock size={18} /><p><strong>Histórico — requer revalidação.</strong> Estes registros não fazem parte das {currentTotal} demandas atuais e não comprovam o comportamento atual do sistema.</p></div>
             )}
 
-            <div className="filters">
+            {scope === 'create' ? (
+              <RequestForm busy={requestBusy} onSubmit={createRequest} success={requestSuccess} onView={viewCreatedRequest} />
+            ) : <><div className="filters">
               <label className="search-box">
                 <span className="sr-only">Pesquisar</span><Search size={18} />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por texto, OS, RE, CNPJ, código ou identificador..." />
@@ -396,12 +510,14 @@ function App() {
               {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem os estados compartilhados; a alteração exige o código de acesso.</p> : <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>}
               {!isSupabaseConfigured && <button onClick={resetLocalStatuses}><RotateCcw size={14} /> Restaurar estados iniciais</button>}
             </footer>
+            </>}
           </div>
 
           <section className="source-strip" aria-label="Origem dos dados">
             <div><Warehouse size={20} /><span><strong>8 itens</strong>Almoxarifado</span></div>
             <div><ShoppingCart size={20} /><span><strong>5 itens</strong>Aquisição</span></div>
             <div><UserRound size={20} /><span><strong>3 itens</strong>Comercial · Alice</span></div>
+            <div><FilePlus2 size={20} /><span><strong>{customRows.length} itens</strong>Abertos pelo painel</span></div>
             <div><FileClock size={20} /><span><strong>{HISTORY_TOTAL} registros</strong>Histórico a revalidar</span></div>
             <p>Última consolidação<br /><strong>10 de setembro de 2026</strong></p>
           </section>

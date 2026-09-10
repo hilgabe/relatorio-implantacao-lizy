@@ -1,6 +1,6 @@
 # Implantação do ERP Lizy — Elétrica Visão
 
-Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 16 demandas atuais de Almoxarifado, Aquisição e Comercial e mantém o histórico da implantação em uma seção separada, marcada para revalidação.
+Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 16 demandas iniciais de Almoxarifado, Aquisição e Comercial, recebe novas solicitações compartilhadas pelo próprio painel e mantém o histórico da implantação em uma seção separada, marcada para revalidação.
 
 ## Painel web
 
@@ -38,6 +38,12 @@ VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 
 O código fica armazenado no banco apenas como hash e é mantido somente na memória do navegador durante a sessão. Visitantes acompanham as atualizações em tempo real. Nunca use chave `service_role` no frontend.
+
+## Abertura de solicitações
+
+O botão **Abrir solicitação** leva ao formulário compartilhado. Cada envio validado recebe um identificador automático `SOL-xxxx`, inicia no estado **Nova** e aparece ao vivo para todos os visitantes. A gravação exige o mesmo código de quatro dígitos usado para alterar estados.
+
+Como o painel é público, o formulário avisa para não registrar senhas, dados pessoais, documentos confidenciais ou informações comerciais sigilosas. O anexo é informado por link `https://`; arquivos não são enviados diretamente ao banco.
 
 ## Documentação histórica
 
