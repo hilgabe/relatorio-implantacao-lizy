@@ -76,7 +76,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .login-panel input { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #bcd6e5; border-radius: 5px; outline: none; background: white; color: #263b4e; font-size: 12px; }
 .login-panel button { height: 38px; padding: 0 13px; color: white; background: #1e6eaa; border: 0; border-radius: 5px; font-size: 11px; font-weight: 700; white-space: nowrap; }
 .login-panel button:disabled { opacity: .6; cursor: wait; }
-.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+.summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
 .summary-card { min-height: 118px; padding: 19px; display: flex; align-items: flex-start; gap: 15px; background: var(--surface); border: 1px solid #e3e9ef; border-radius: 9px; box-shadow: 0 5px 16px rgba(22, 52, 82, .035); }
 .summary-card__icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 8px; color: #216bb2; background: #e9f2fb; }
 .summary-card > div:last-child { display: grid; }
@@ -86,6 +86,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .summary-card--orange .summary-card__icon { color: #bd5c2f; background: #fff0e8; }
 .summary-card--gold .summary-card__icon { color: #b17c16; background: #fff7df; }
 .summary-card--green .summary-card__icon { color: #24865e; background: #e8f7ef; }
+.summary-card--purple .summary-card__icon { color: #7246a5; background: #f1eafb; }
 
 .workspace { background: white; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
 .section-heading { padding: 26px 28px 20px; display: flex; align-items: flex-end; justify-content: space-between; }
@@ -95,10 +96,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .tabs button { display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; color: #68788a; background: transparent; border: 0; border-bottom: 2px solid transparent; font-size: 12px; font-weight: 600; }
 .tabs button:hover { color: var(--navy); }
 .tabs button.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tabs button.tab--meeting { color: #70439b; }
+.tabs button.tab--meeting.active { color: #63358e; border-bottom-color: #8d58b8; background: #faf6fd; }
 .tabs button span { min-width: 21px; padding: 2px 6px; border-radius: 10px; color: #617183; background: #edf1f5; font-size: 10px; }
 .tabs button.active span { color: var(--blue); background: #e7f1fb; }
 .history-banner { margin: 18px 28px 0; padding: 13px 15px; display: flex; gap: 10px; align-items: center; color: #6f5221; background: #fff9e9; border: 1px solid #f2dfae; border-radius: 7px; }
 .history-banner p { margin: 0; font-size: 12px; line-height: 1.45; }
+.meeting-banner { margin: 18px 28px 0; padding: 15px 17px; display: flex; gap: 11px; align-items: flex-start; color: #593274; background: linear-gradient(100deg, #faf5ff, #fff9ec); border: 1px solid #d9c2ea; border-left: 5px solid #8b55b2; border-radius: 8px; box-shadow: 0 6px 16px rgba(92, 50, 119, .06); }
+.meeting-banner svg { flex: 0 0 auto; color: #7a45a2; }
+.meeting-banner p { margin: 0; font-size: 12.5px; line-height: 1.5; }
 .filters { display: flex; align-items: center; gap: 8px; padding: 18px 28px; background: #fbfcfd; border-bottom: 1px solid var(--line); }
 .search-box { flex: 1 1 350px; min-width: 240px; height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border: 1px solid #ced8e2; border-radius: 6px; background: white; color: #8190a0; }
 .search-box:focus-within, .select-wrap:focus-within { border-color: #5c9bd2; box-shadow: 0 0 0 3px rgba(40,125,193,.08); }
@@ -115,13 +121,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .task-table__head { min-height: 40px; padding: 0 28px; background: #f4f7f9; border-bottom: 1px solid var(--line); color: #718193; font-size: 10px; text-transform: uppercase; letter-spacing: .075em; font-weight: 700; }
 .task-row { padding: 19px 28px; border-bottom: 1px solid #e9edf1; transition: background .18s ease; }
 .task-row:hover { background: #fbfdff; }
+.task-row--meeting { background: linear-gradient(90deg, #fcf8ff 0, #fffdf8 72%); border-left: 5px solid #8b55b2; padding-left: 23px; }
+.task-row--meeting:hover { background: linear-gradient(90deg, #f8f0fd 0, #fff9eb 72%); }
 .task-main { min-width: 0; }
+.task-flags { min-height: 20px; display: flex; align-items: center; gap: 9px; margin-bottom: 5px; }
 .task-id { display: inline-block; margin-bottom: 5px; color: var(--blue); font: 700 10px 'Manrope', sans-serif; letter-spacing: .08em; }
+.task-flags .task-id { margin-bottom: 0; }
 .task-main h3 { margin: 0 0 5px; font: 700 13px 'Manrope', sans-serif; color: #1d3248; }
 .task-main p { max-width: 750px; margin: 0; color: #627386; font-size: 11.5px; line-height: 1.45; }
 .task-main small { display: flex; align-items: center; gap: 5px; margin-top: 8px; color: #83909d; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .badge { display: inline-flex; align-items: center; max-width: 100%; padding: 5px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; line-height: 1.2; }
 .badge--sector { color: #376584; background: #eaf3f7; }
+.badge--meeting { color: #683793; background: #f1e5fa; border: 1px solid #d9bfea; text-transform: uppercase; letter-spacing: .045em; }
 .badge--priority-critica { color: #a43f35; background: #fdebe9; }
 .badge--priority-alta { color: #ad6423; background: #fff0e1; }
 .badge--priority-media { color: #987219; background: #fff6d9; }
@@ -166,7 +177,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .public-ack { display: flex; align-items: flex-start; gap: 9px; margin-top: 20px; color: #52677a; font-size: 11.5px; line-height: 1.45; }
 .public-ack input { margin-top: 2px; accent-color: #1769aa; }
 .request-form__actions { display: flex; justify-content: flex-end; margin-top: 22px; }
-.source-strip { margin-top: 22px; padding: 20px 24px; display: grid; grid-template-columns: repeat(5, 1fr) auto; gap: 18px; align-items: center; background: #eaf0f4; border-radius: 8px; color: #53677b; }
+.source-strip { margin-top: 22px; padding: 20px 24px; display: grid; grid-template-columns: repeat(6, 1fr) auto; gap: 18px; align-items: center; background: #eaf0f4; border-radius: 8px; color: #53677b; }
 .source-strip > div { display: flex; align-items: center; gap: 11px; }
 .source-strip svg { color: #397baf; }
 .source-strip span { display: flex; flex-direction: column; font-size: 10px; }
@@ -203,6 +214,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .warning-box { display: flex; gap: 10px; padding: 14px; color: #705421; background: #fff9e8; border: 1px solid #eedcae; border-radius: 7px; }
 .warning-box svg { flex: 0 0 auto; }
 .warning-box p { margin: 0; font-size: 12px; line-height: 1.5; }
+.meeting-box { display: flex; gap: 10px; margin-top: 18px; padding: 14px; color: #583173; background: #faf5ff; border: 1px solid #ddc9ec; border-radius: 7px; }
+.meeting-box svg { flex: 0 0 auto; color: #7a45a2; }
+.meeting-box p { margin: 0; font-size: 12px; line-height: 1.5; }
 .toast { position: fixed; left: 50%; bottom: 25px; z-index: 60; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 11px 16px; color: white; background: #19344e; border-radius: 7px; box-shadow: 0 12px 30px rgba(0,0,0,.18); font-size: 12px; }
 .print-report { display: none; }
 
@@ -245,8 +259,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .result-count { margin-top: 17px; }
   .tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 10px; overflow: visible; }
   .tabs button { justify-content: center; padding: 0 8px; text-align: left; }
-  .tabs button:last-child { grid-column: 1 / -1; }
-  .history-banner { margin: 14px 14px 0; align-items: flex-start; }
+  .tabs button:last-child { grid-column: auto; }
+  .history-banner, .meeting-banner { margin: 14px 14px 0; align-items: flex-start; }
   .filters { padding: 14px; }
   .task-table { grid-template-columns: 1fr; padding: 10px; }
   .workspace__footer { padding: 13px 18px; align-items: flex-start; flex-direction: column; }

@@ -3,8 +3,9 @@ import { tasks } from '../data/tasks'
 import { buildReportText, filterTasks, normalizeText } from './tasks'
 
 describe('base de solicitações', () => {
-  it('mantém 16 demandas atuais e o histórico separado', () => {
+  it('mantém demandas operacionais, pauta da reunião e histórico separados', () => {
     expect(tasks.filter((task) => task.scope === 'current')).toHaveLength(16)
+    expect(tasks.filter((task) => task.scope === 'meeting')).toHaveLength(9)
     expect(tasks.filter((task) => task.scope === 'history')).toHaveLength(2)
   })
 
@@ -37,5 +38,12 @@ describe('filtros e relatório', () => {
     expect(report).toContain('ALM-001')
     expect(report).toContain('Almoxarifado - arquivo recebido')
     expect(report).toContain('Próximo passo sugerido')
+  })
+
+  it('identifica explicitamente os itens da pauta da reunião no relatório', () => {
+    const meetingTask = tasks.find((task) => task.id === 'PCP-001')
+    const report = buildReportText([meetingTask], new Date('2026-09-15T12:00:00'))
+    expect(report).toContain('pauta da reunião com o suporte Lizy')
+    expect(meetingTask.meeting).toBe(true)
   })
 })

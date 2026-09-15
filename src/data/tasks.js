@@ -5,6 +5,7 @@ const almoxarifado = 'Almoxarifado - arquivo recebido'
 const aquisicao = 'Aquisição - arquivo recebido'
 const historico = 'Histórico da implantação - requer revalidação'
 const comercial = 'Solicitações comerciais recebidas em 10/09/2026'
+const reuniaoPcp = 'Pauta da reunião com o suporte Lizy - registrada em 15/09/2026'
 
 export const tasks = [
   {
@@ -157,6 +158,97 @@ export const tasks = [
     scope: 'current',
   },
   {
+    id: 'PCP-001',
+    title: 'Separar o conteúdo das impressões de peritagem e laudos',
+    description: 'Corrigir a mistura de informações entre ficha de peritagem, laudo técnico e laudo final. Cada impressão deve apresentar somente o conteúdo correspondente ao documento escolhido.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Relato operacional de 15/09/2026: as opções do botão Imprimir estão apresentando peritagem, laudo inicial e laudo final em conjunto.',
+    impact: 'A mistura de etapas gera documentos extensos, confusos e inadequados para o uso interno ou para o envio ao cliente.',
+    nextStep: 'Na reunião, confirmar os nomes definitivos dos documentos e mapear os campos exclusivos da ficha de peritagem, do laudo técnico do cliente e do laudo final.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-002',
+    title: 'Exibir no PDF somente os itens selecionados na peritagem',
+    description: 'Ao gerar o PDF da peritagem, incluir somente os itens marcados para substituição, recuperação ou execução. Itens não selecionados devem ser omitidos.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Na peritagem, as caixas já identificam os itens aplicáveis, mas o documento gerado não utiliza essa seleção como filtro.',
+    impact: 'Itens não aplicáveis deixam o PDF mais longo e dificultam a leitura do que realmente será executado.',
+    nextStep: 'Confirmar com o suporte se o gerador de PDF pode filtrar os componentes pelo estado selecionado e validar um caso com itens marcados e desmarcados.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-003',
+    title: 'Liberar a seleção de fotos nas ordens finalizadas',
+    description: 'Disponibilizar em Serviços > Finalizados o controle “Relatório” das fotos, permitindo escolher quais imagens deverão aparecer no laudo final.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Relato operacional: as fotos permanecem visíveis na OS finalizada, mas o controle de seleção para o relatório não aparece.',
+    impact: 'A equipe não consegue preparar corretamente o laudo final quando a seleção de imagens precisa ser ajustada após a finalização.',
+    nextStep: 'Definir se a seleção de fotos poderá ser alterada diretamente em Finalizados ou se exigirá reabertura controlada da OS.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-004',
+    title: 'Definir a previsão de finalização do serviço',
+    description: 'Adicionar no cabeçalho padrão da peritagem um campo de previsão de conclusão do serviço, separado da data prevista de entrega ao cliente.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Média', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'A tela possui previsão de entrega, mas não foi identificada uma previsão específica para a conclusão do serviço do equipamento.',
+    impact: 'A produção não dispõe de uma data própria para planejar e acompanhar a conclusão técnica do serviço.',
+    nextStep: 'Definir com o suporte o nome do campo, responsável pelo preenchimento, obrigatoriedade, possibilidade de alteração, histórico e documentos em que a data aparecerá.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-005',
+    title: 'Exibir o defeito alegado na ficha e nos laudos',
+    description: 'Fazer o conteúdo do campo “Defeito alegado”, existente no cabeçalho padrão da peritagem, aparecer na ficha de peritagem e nos laudos aplicáveis.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Relato operacional: o campo pode ser preenchido na abertura da OS, pelo Comercial ou pela Peritagem, mas não aparece nos documentos gerados.',
+    impact: 'O documento perde o registro do problema informado para o equipamento e reduz o contexto técnico do atendimento.',
+    nextStep: 'Confirmar em quais modelos o campo deve aparecer — ficha de peritagem, laudo técnico e/ou laudo final — e testar o conteúdo originado por cada perfil.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-006',
+    title: 'Definir o modelo de laudo técnico para o cliente',
+    description: 'Criar um laudo destinado ao cliente, mais organizado e apresentável, com texto técnico digitado, identificação da OS e do equipamento e espaço para fotos.',
+    sector: 'PCP / Peritagem', owner: 'Franklin / Equipe Lizy', priority: 'Média', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Hoje esse documento é preparado manualmente no Word. O formato e a diferença em relação ao laudo final ainda precisam ser definidos.',
+    impact: 'O processo manual consome tempo e não garante um padrão visual e informacional entre os laudos enviados aos clientes.',
+    nextStep: 'Alinhar com Franklin e com o suporte o modelo, campos obrigatórios, fotos, assinatura, nomenclatura e relação com o laudo final antes de solicitar desenvolvimento.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-007',
+    title: 'Adicionar uma impressão própria da ficha de peritagem',
+    description: 'Incluir no botão Imprimir uma opção específica chamada “Ficha de peritagem” ou “Peritagem”, sem confundi-la com o laudo técnico do cliente.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'O print anexo identifica o botão Imprimir usado como ponto de acesso aos documentos, mas não mostra o menu de opções aberto.',
+    impact: 'Sem uma opção própria, a peritagem fica misturada aos laudos ou não pode ser emitida de forma independente.',
+    nextStep: 'Confirmar a nomenclatura, a disponibilidade por etapa da OS e o conteúdo da nova impressão, aplicando também o filtro de itens selecionados.',
+    attachments: [{ src: '/anexos/pcp-peritagem-botao-imprimir.png', alt: 'Botão Imprimir na área de Serviços', caption: 'Referência visual — botão Imprimir informado na solicitação' }],
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-008',
+    title: 'Verificar a obrigatoriedade do balanceamento em Serviços Aprovados',
+    description: 'Confirmar se o balanceamento está impedindo o avanço de uma OS em Serviços > Aprovados quando não é preenchido. A alteração só deve ser feita se o bloqueio for reproduzido.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Média', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Há dúvida operacional sobre a obrigatoriedade atual do balanceamento; o comportamento ainda não foi comprovado.',
+    impact: 'Uma validação indevida pode bloquear o fluxo, enquanto uma alteração sem reprodução pode modificar uma regra que já está correta.',
+    nextStep: 'Testar uma OS controlada sem balanceamento. Se houver bloqueio, solicitar a retirada da obrigatoriedade; se o campo já for opcional, não alterar.',
+    meeting: true, scope: 'meeting',
+  },
+  {
+    id: 'PCP-009',
+    title: 'Padronizar as opções de impressão entre as ordens de serviço',
+    description: 'Investigar por que algumas OS exibem somente o laudo final e outras somente o laudo técnico, sem um padrão aparente nas etapas de Peritagem, Aprovados e Finalizados.',
+    sector: 'PCP / Peritagem', owner: 'Equipe Lizy', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
+    evidence: 'Relato operacional de inconsistência entre ordens de serviço; ainda não foram fornecidos números de OS para comparação.',
+    impact: 'A ausência de um padrão dificulta saber quais documentos deveriam estar disponíveis e pode impedir a emissão necessária.',
+    nextStep: 'Comparar OS dos mesmos status e verificar regras de etapa, campos obrigatórios, permissões, versão do registro e motivo de indisponibilidade de cada documento.',
+    meeting: true, scope: 'meeting',
+  },
+  {
     id: 'HIS-002',
     title: 'Revalidar ajustes de peritagem e laudo',
     description: 'Revalidar a avaliação inicial de resistência de aquecimento no motor de indução, o uso de maiúsculas/minúsculas na resistência ôhmica e o laudo final com testes de PT100 e resistência.',
@@ -177,4 +269,5 @@ export const tasks = [
 ]
 
 export const CURRENT_TOTAL = tasks.filter((task) => task.scope === 'current').length
+export const MEETING_TOTAL = tasks.filter((task) => task.scope === 'meeting').length
 export const HISTORY_TOTAL = tasks.filter((task) => task.scope === 'history').length

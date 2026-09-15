@@ -13,6 +13,7 @@ import {
   Filter,
   KeyRound,
   Lock,
+  MessagesSquare,
   PackageCheck,
   Paperclip,
   Printer,
@@ -25,7 +26,7 @@ import {
   Warehouse,
   X,
 } from 'lucide-react'
-import { HISTORY_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
+import { HISTORY_TOTAL, MEETING_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
 import { mapCustomTask, upsertCustomTask } from './lib/requests'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
 import { mergeTaskStatuses, statusMap } from './lib/statuses'
@@ -72,6 +73,7 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
         </div>
         <div className="drawer__body">
           <div className="detail-badges">
+            {task.meeting && <Badge type="meeting">Pauta da reunião</Badge>}
             <Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge>
             <Badge type="sector">{task.sector}</Badge>
           </div>
@@ -110,6 +112,9 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
           )}
           {task.scope === 'history' && (
             <div className="warning-box"><AlertTriangle size={18} /><p>Item histórico. Requer revalidação antes de ser tratado como comportamento atual do Lizy.</p></div>
+          )}
+          {task.meeting && (
+            <div className="meeting-box"><MessagesSquare size={18} /><p><strong>Assunto para reunião.</strong> Este item foi separado para alinhamento com o suporte Lizy e ainda não representa uma alteração aprovada.</p></div>
           )}
         </div>
       </aside>
@@ -192,7 +197,10 @@ function App() {
   )
   const selectedTask = tasks.find((task) => task.id === selectedId)
   const currentTasks = tasks.filter((task) => task.scope === 'current')
+  const meetingTasks = tasks.filter((task) => task.scope === 'meeting')
   const currentTotal = currentTasks.length
+  const meetingTotal = meetingTasks.length
+  const activeTotal = currentTotal + meetingTotal
   const criticalCount = currentTasks.filter((task) => task.priority === 'Crítica').length
   const awaitingCount = currentTasks.filter((task) => task.status === 'Aguardando Lizy').length
   const resolvedCount = currentTasks.filter((task) => task.status === 'Resolvida').length
@@ -309,8 +317,8 @@ function App() {
   }
 
   function exportCsv() {
-    const headers = ['ID', 'Título', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
-    const rows = visibleTasks.map((task) => [task.id, task.title, task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
+    const headers = ['ID', 'Título', 'Classificação', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
+    const rows = visibleTasks.map((task) => [task.id, task.title, task.meeting ? 'Pauta da reunião com o suporte Lizy' : 'Demanda operacional', task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(';')).join('\n')
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
     const link = document.createElement('a')
@@ -389,7 +397,7 @@ function App() {
         <div className="topbar__meta">
           {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
-          <span className="topbar__date">Base atualizada em 10/09/2026</span>
+          <span className="topbar__date">Base atualizada em 15/09/2026</span>
           {isSupabaseConfigured && (isEditorUnlocked ? (
             <button className="session-button" onClick={lockEditing}><Lock size={14} /> Bloquear edição</button>
           ) : (
@@ -403,7 +411,7 @@ function App() {
           <div className="hero__content">
             <span className="eyebrow eyebrow--light">Elétrica Visão × Lizy</span>
             <h1>Painel de solicitações da implantação</h1>
-            <p>Visão consolidada das pendências de Almoxarifado, Aquisição e Comercial, com responsáveis, anexos e histórico técnico separado para revalidação.</p>
+            <p>Visão consolidada das pendências de Almoxarifado, Aquisição e Comercial, com uma pauta destacada de PCP e Peritagem para a reunião com o suporte Lizy.</p>
             <div className="hero__actions">
               <button className="button button--light" onClick={openRequestForm}><FilePlus2 size={18} /> Abrir solicitação</button>
               <button className="button button--ghost" onClick={() => window.print()}><Printer size={17} /> Imprimir relatório</button>
@@ -411,8 +419,8 @@ function App() {
               <button className="button button--ghost" onClick={exportCsv}><Download size={17} /> Exportar CSV</button>
             </div>
           </div>
-          <div className="hero__signal" aria-label={`${currentTotal} demandas atuais`}>
-            <div className="signal-ring"><strong>{currentTotal}</strong><span>demandas<br />atuais</span></div>
+          <div className="hero__signal" aria-label={`${activeTotal} demandas em acompanhamento`}>
+            <div className="signal-ring"><strong>{activeTotal}</strong><span>demandas em<br />acompanhamento</span></div>
             <p><span></span> Base pronta para acompanhamento</p>
           </div>
         </section>
@@ -435,7 +443,8 @@ function App() {
           )}
 
           <div className="summary-grid">
-            <SummaryCard icon={PackageCheck} label="Demandas atuais" value={currentTotal} detail={`${customRows.length} abertas pelo painel`} />
+            <SummaryCard icon={PackageCheck} label="Demandas operacionais" value={currentTotal} detail={`${customRows.length} abertas pelo painel`} />
+            <SummaryCard icon={MessagesSquare} label="Pauta da reunião" value={meetingTotal} detail="Separada das demais" tone="purple" />
             <SummaryCard icon={AlertTriangle} label="Prioridade crítica" value={criticalCount} detail="Classificação proposta" tone="orange" />
             <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail={isSupabaseConfigured ? 'Estado compartilhado' : 'Estado local atual'} tone="gold" />
             <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${currentTotal} demandas atuais`} tone="green" />
@@ -445,7 +454,7 @@ function App() {
             <div className="section-heading">
               <div>
                 <span className="eyebrow">Relatório vivo</span>
-                <h2>{scope === 'create' ? 'Formulário de solicitação' : 'Solicitações e pendências'}</h2>
+                <h2>{scope === 'create' ? 'Formulário de solicitação' : scope === 'meeting' ? 'Pauta da reunião com o suporte Lizy' : 'Solicitações e pendências'}</h2>
               </div>
               {scope !== 'create' && <span className="result-count">{visibleTasks.length} {visibleTasks.length === 1 ? 'item exibido' : 'itens exibidos'}</span>}
             </div>
@@ -453,6 +462,9 @@ function App() {
             <div className="tabs" role="tablist" aria-label="Tipo de solicitação">
               <button role="tab" aria-selected={scope === 'current'} className={scope === 'current' ? 'active' : ''} onClick={() => { setScope('current'); setSector('') }}>
                 <BarChart3 size={17} /> Demandas atuais <span>{currentTotal}</span>
+              </button>
+              <button role="tab" aria-selected={scope === 'meeting'} className={scope === 'meeting' ? 'active tab--meeting' : 'tab--meeting'} onClick={() => { setScope('meeting'); setSector('') }}>
+                <MessagesSquare size={17} /> Pauta da reunião <span>{MEETING_TOTAL}</span>
               </button>
               <button role="tab" aria-selected={scope === 'history'} className={scope === 'history' ? 'active' : ''} onClick={() => { setScope('history'); setSector('') }}>
                 <FileClock size={17} /> Histórico · requer revalidação <span>{HISTORY_TOTAL}</span>
@@ -464,6 +476,9 @@ function App() {
 
             {scope === 'history' && (
               <div className="history-banner"><FileClock size={18} /><p><strong>Histórico — requer revalidação.</strong> Estes registros não fazem parte das {currentTotal} demandas atuais e não comprovam o comportamento atual do sistema.</p></div>
+            )}
+            {scope === 'meeting' && (
+              <div className="meeting-banner"><MessagesSquare size={19} /><p><strong>Pauta exclusiva da reunião com o suporte Lizy.</strong> Os itens abaixo servem para esclarecer regras, demonstrar problemas e decidir o que realmente será aplicado. Eles ainda não representam alterações aprovadas.</p></div>
             )}
 
             {scope === 'create' ? (
@@ -486,9 +501,9 @@ function App() {
                 <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
               </div>
               {visibleTasks.length ? visibleTasks.map((task) => (
-                <article className="task-row" role="row" key={task.id}>
+                <article className={`task-row${task.meeting ? ' task-row--meeting' : ''}`} role="row" key={task.id}>
                   <div className="task-main" role="cell">
-                    <span className="task-id">{task.id}</span>
+                    <div className="task-flags"><span className="task-id">{task.id}</span>{task.meeting && <Badge type="meeting">Reunião com suporte</Badge>}</div>
                     <h3>{task.title}</h3>
                     <p>{task.description}</p>
                     <small><ExternalLink size={13} /> {task.evidence}</small>
@@ -517,15 +532,16 @@ function App() {
             <div><Warehouse size={20} /><span><strong>8 itens</strong>Almoxarifado</span></div>
             <div><ShoppingCart size={20} /><span><strong>5 itens</strong>Aquisição</span></div>
             <div><UserRound size={20} /><span><strong>3 itens</strong>Comercial · Alice</span></div>
+            <div><MessagesSquare size={20} /><span><strong>{MEETING_TOTAL} itens</strong>Pauta PCP / Peritagem</span></div>
             <div><FilePlus2 size={20} /><span><strong>{customRows.length} itens</strong>Abertos pelo painel</span></div>
             <div><FileClock size={20} /><span><strong>{HISTORY_TOTAL} registros</strong>Histórico a revalidar</span></div>
-            <p>Última consolidação<br /><strong>10 de setembro de 2026</strong></p>
+            <p>Última consolidação<br /><strong>15 de setembro de 2026</strong></p>
           </section>
         </section>
 
         <section className="print-report" aria-hidden="true">
-          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 10/09/2026</p></header>
-          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2><p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status}</strong></p><p>{task.description}</p><dl><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
+          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 15/09/2026</p></header>
+          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2>{task.meeting && <p><strong>Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada</strong></p>}<p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status}</strong></p><p>{task.description}</p><dl><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
         </section>
       </main>
 

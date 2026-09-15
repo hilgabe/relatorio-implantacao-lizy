@@ -1,6 +1,6 @@
 # Implantação do ERP Lizy — Elétrica Visão
 
-Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 16 demandas iniciais de Almoxarifado, Aquisição e Comercial, recebe novas solicitações compartilhadas pelo próprio painel e mantém o histórico da implantação em uma seção separada, marcada para revalidação.
+Este repositório reúne um relatório web vivo das solicitações enviadas à equipe da Lizy e a documentação de análise da migração do Alterdata para o Lizy. A base pública consolida 16 demandas operacionais de Almoxarifado, Aquisição e Comercial, recebe novas solicitações compartilhadas pelo próprio painel e mantém duas áreas separadas: uma pauta com 9 assuntos de PCP/Peritagem para reunião com o suporte Lizy e o histórico da implantação marcado para revalidação.
 
 ## Painel web
 
@@ -26,6 +26,7 @@ O conteúdo gerado em `dist/` pode ser publicado como site estático. Na Vercel,
 - a integração de status compartilhado usa Supabase Realtime e depende das variáveis de ambiente do projeto na Vercel;
 - o código compartilhado simplifica o acesso, mas não substitui autenticação individual nem identifica qual pessoa realizou cada alteração;
 - prioridades são uma classificação proposta pela Elétrica Visão, não uma definição da Lizy;
+- os itens da aba **Pauta da reunião** servem para alinhamento e decisão; não representam alterações já aprovadas;
 - o histórico precisa ser revalidado e não comprova o funcionamento atual do ERP.
 
 ## Status compartilhado ao vivo

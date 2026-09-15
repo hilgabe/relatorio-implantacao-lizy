@@ -29,6 +29,7 @@ export function buildReportText(tasks, generatedAt = new Date()) {
   tasks.forEach((task) => {
     lines.push(
       `${task.id} — ${task.title}`,
+      task.meeting ? 'Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada' : null,
       `Setor: ${task.sector} | Responsável: ${task.owner || 'Não informado'} | Prioridade proposta: ${task.priority} | Estado: ${task.status}`,
       `Solicitação: ${task.description}`,
       `Origem: ${task.origin}`,
@@ -39,5 +40,5 @@ export function buildReportText(tasks, generatedAt = new Date()) {
       '',
     )
   })
-  return lines.join('\n')
+  return lines.filter((line) => line !== null).join('\n')
 }
