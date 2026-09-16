@@ -128,7 +128,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .select-wrap > svg { position: absolute; right: 10px; pointer-events: none; color: #7c8a99; }
 .clear-button { height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 10px; color: #52677a; background: transparent; border: 0; font-size: 11px; }
 
-.task-table__head, .task-row { display: grid; grid-template-columns: minmax(285px, 1fr) 112px 108px 92px 122px 145px 78px; gap: 14px; align-items: center; }
+.task-table__head, .task-row { display: grid; grid-template-columns: minmax(320px, 1fr) 120px 100px 126px 150px 84px; gap: 14px; align-items: center; }
 .task-table__head { min-height: 40px; padding: 0 28px; background: #f4f7f9; border-bottom: 1px solid var(--line); color: #718193; font-size: 10px; text-transform: uppercase; letter-spacing: .075em; font-weight: 700; }
 .task-row { padding: 19px 28px 19px 24px; border-bottom: 1px solid #e9edf1; border-left: 4px solid transparent; transition: background .18s ease, opacity .18s ease; }
 .task-row:hover { background: #fbfdff; }
@@ -162,8 +162,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .badge--priority-baixa { color: #397658; background: #e9f6ee; }
 .badge--pending { color: #8a6417; background: #fff6d9; border: 1px solid #ead99a; }
 .badge--resolved { color: #1f704d; background: #e5f6ed; border: 1px solid #b9dfca; }
-.owner-cell { display: flex; align-items: center; gap: 6px; color: #425b70; font-size: 11px; font-weight: 600; }
-.owner-cell svg { color: #5688ad; }
 .select-wrap--status { min-width: 0; width: 100%; height: 34px; background: #f9fbfc; }
 .status-control--pending { border-color: #e2cf94; background: #fffbef; }
 .status-control--resolved { border-color: #aad4bd; background: #f0f9f4; }

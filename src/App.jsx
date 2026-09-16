@@ -25,7 +25,6 @@ import {
   Search,
   ShieldCheck,
   ShoppingCart,
-  UserRound,
   Warehouse,
   X,
 } from 'lucide-react'
@@ -58,10 +57,9 @@ function statusType(status) {
 }
 
 function noteTemplates(task) {
-  const owner = task.owner && task.owner !== 'Não informado' ? task.owner : 'responsável'
   if (task.status === 'Resolvida') {
     return [
-      'Ajuste realizado e validado com a equipe responsável.',
+      'Ajuste realizado e funcionamento validado.',
       'Orientação repassada e procedimento confirmado com o solicitante.',
       'Configuração corrigida; funcionamento testado e normalizado.',
       'Não foi necessário alterar o sistema; o procedimento correto foi orientado e validado.',
@@ -77,15 +75,15 @@ function noteTemplates(task) {
   if (task.status === 'Em análise') {
     return [
       'Situação em análise para identificar a causa e definir a solução.',
-      `Aguardando informações de ${owner} para concluir a análise.`,
+      'Aguardando informações complementares para concluir a análise.',
       'Teste controlado pendente para reproduzir o comportamento informado.',
       'Reunião necessária para alinhar a regra antes de solicitar a alteração.',
     ]
   }
   return [
     'Solicitação registrada e aguardando triagem.',
-    `Aguardando retorno de ${owner} para iniciar o atendimento.`,
-    'Aguardando definição do responsável e da data de atendimento.',
+    'Aguardando retorno com as informações necessárias para iniciar o atendimento.',
+    'Aguardando definição da data de atendimento.',
   ]
 }
 
@@ -185,7 +183,6 @@ function DetailPanel({ task, canEdit, onClose, onTrackingChange }) {
           </section>
 
           <dl className="detail-list">
-            <div><dt>Responsável</dt><dd>{task.owner || 'Não informado'}</dd></div>
             <div><dt>Origem</dt><dd>{task.origin}</dd></div>
             <div><dt>Evidência / referência</dt><dd>{task.evidence}</dd></div>
             <div><dt>Impacto</dt><dd>{task.impact}</dd></div>
@@ -244,7 +241,6 @@ function RequestForm({ busy, onSubmit, onView, success }) {
           <label className="form-field form-field--wide"><span>Título da solicitação *</span><input name="title" required minLength="5" maxLength="120" placeholder="Ex.: Ajustar informações da proposta comercial" /></label>
           <label className="form-field"><span>Seu nome *</span><input name="requester" required minLength="2" maxLength="100" placeholder="Quem está solicitando" /></label>
           <label className="form-field"><span>Setor ou módulo *</span><input name="sector" required minLength="2" maxLength="80" list="sector-options" placeholder="Ex.: Comercial" /><datalist id="sector-options"><option value="Almoxarifado" /><option value="Aquisição" /><option value="Comercial" /><option value="Financeiro" /><option value="Peritagem" /><option value="PCP" /><option value="Produção" /></datalist></label>
-          <label className="form-field"><span>Responsável *</span><input name="owner" required minLength="2" maxLength="100" list="owner-options" defaultValue="A definir" /><datalist id="owner-options"><option value="Alice" /><option value="Equipe Lizy" /><option value="A definir" /></datalist></label>
           <label className="form-field"><span>Prioridade sugerida *</span><select name="priority" required defaultValue="Média">{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="form-field"><span>Prazo desejado</span><input name="dueDate" type="date" /><small>Opcional. Pode ser definido ou alterado depois.</small></label>
           <label className="form-field form-field--full"><span>Descrição e contexto *</span><textarea name="description" required minLength="10" maxLength="2000" rows="5" placeholder="Explique onde acontece, como funciona hoje e o que precisa ser alterado." /></label>
@@ -267,7 +263,6 @@ function App() {
   const [sector, setSector] = useState('')
   const [status, setStatus] = useState('')
   const [priority, setPriority] = useState('')
-  const [owner, setOwner] = useState('')
   const [resolution, setResolution] = useState('')
   const [deadline, setDeadline] = useState('')
   const [savedTracking, setSavedTracking] = useState(loadTracking)
@@ -289,10 +284,9 @@ function App() {
     [customTasks, remoteTracking, savedTracking],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
-  const owners = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.owner || 'Não informado'))], [tasks, scope])
   const visibleTasks = useMemo(
-    () => sortTasks(filterTasks(tasks, { scope, query, sector, status, priority, owner, resolution, deadline })),
-    [tasks, scope, query, sector, status, priority, owner, resolution, deadline],
+    () => sortTasks(filterTasks(tasks, { scope, query, sector, status, priority, resolution, deadline })),
+    [tasks, scope, query, sector, status, priority, resolution, deadline],
   )
   const selectedTask = tasks.find((task) => task.id === selectedId)
   const currentTasks = tasks.filter((task) => task.scope === 'current')
@@ -431,8 +425,8 @@ function App() {
   }
 
   function exportCsv() {
-    const headers = ['ID', 'Título', 'Classificação', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Prazo', 'Atualização ou solução', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
-    const rows = visibleTasks.map((task) => [task.id, task.title, task.meeting ? 'Pauta da reunião com o suporte Lizy' : 'Demanda operacional', task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, formatDueDate(task.dueDate), task.trackingNote || 'Não informada', task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
+    const headers = ['ID', 'Título', 'Classificação', 'Descrição', 'Setor', 'Prioridade proposta', 'Estado', 'Prazo', 'Atualização ou solução', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
+    const rows = visibleTasks.map((task) => [task.id, task.title, task.meeting ? 'Pauta da reunião com o suporte Lizy' : 'Demanda operacional', task.description, task.sector, task.priority, task.status, formatDueDate(task.dueDate), task.trackingNote || 'Não informada', task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(';')).join('\n')
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
     const link = document.createElement('a')
@@ -448,7 +442,6 @@ function App() {
     setSector('')
     setStatus('')
     setPriority('')
-    setOwner('')
     setResolution('')
     setDeadline('')
   }
@@ -474,7 +467,6 @@ function App() {
       p_description: values.get('description'),
       p_sector: values.get('sector'),
       p_requester: values.get('requester'),
-      p_owner: values.get('owner'),
       p_priority: values.get('priority'),
       p_reference: values.get('reference'),
       p_impact: values.get('impact'),
@@ -639,16 +631,15 @@ function App() {
                 {query && <button onClick={() => setQuery('')} aria-label="Limpar pesquisa"><X size={16} /></button>}
               </label>
               <label className="select-wrap"><span className="sr-only">Filtrar setor</span><select value={sector} onChange={(event) => setSector(event.target.value)}><option value="">Todos os setores</option>{sectors.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
-              <label className="select-wrap"><span className="sr-only">Filtrar responsável</span><select value={owner} onChange={(event) => setOwner(event.target.value)}><option value="">Todos os responsáveis</option>{owners.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os estados</option>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar prioridade</span><select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Todas as prioridades</option>{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar prazo</span><select value={deadline} onChange={(event) => setDeadline(event.target.value)}><option value="">Todos os prazos</option><option value="overdue">Atrasados</option><option value="soon">Vencem em até 7 dias</option><option value="scheduled">Prazo definido</option><option value="none">Sem prazo</option></select><ChevronDown size={16} /></label>
-              {(query || sector || status || priority || owner || resolution || deadline) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
+              {(query || sector || status || priority || resolution || deadline) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
             </div>
 
             <div className="task-table" role="table" aria-label="Solicitações filtradas">
               <div className="task-table__head" role="row">
-                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Prazo</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
+                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Prioridade</span><span role="columnheader">Prazo</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
               </div>
               {visibleTasks.length ? visibleTasks.map((task) => (
                 <article className={`task-row task-row--${statusType(task.status)} task-row--${priorityType(task.priority)}${task.meeting ? ' task-row--meeting' : ''}`} role="row" key={task.id}>
@@ -660,7 +651,6 @@ function App() {
                     <small><ExternalLink size={13} /> {task.evidence}</small>
                   </div>
                   <div role="cell"><Badge type="sector">{task.sector}</Badge></div>
-                  <div className="owner-cell" role="cell"><UserRound size={14} /> {task.owner || 'Não informado'}</div>
                   <div role="cell"><Badge type={priorityType(task.priority)}>{task.priority}</Badge></div>
                   <div role="cell"><DeadlineBadge task={task} /></div>
                   <div role="cell">
@@ -683,7 +673,7 @@ function App() {
           <section className="source-strip" aria-label="Origem dos dados">
             <div><Warehouse size={20} /><span><strong>8 itens</strong>Almoxarifado</span></div>
             <div><ShoppingCart size={20} /><span><strong>5 itens</strong>Aquisição</span></div>
-            <div><UserRound size={20} /><span><strong>3 itens</strong>Comercial · Alice</span></div>
+            <div><BarChart3 size={20} /><span><strong>3 itens</strong>Comercial</span></div>
             <div><MessagesSquare size={20} /><span><strong>{MEETING_TOTAL} itens</strong>Pauta PCP / Peritagem</span></div>
             <div><FilePlus2 size={20} /><span><strong>{customRows.length} itens</strong>Abertos pelo painel</span></div>
             <div><FileClock size={20} /><span><strong>{HISTORY_TOTAL} registros</strong>Histórico a revalidar</span></div>
@@ -693,7 +683,7 @@ function App() {
 
         <section className="print-report" aria-hidden="true">
           <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 16/09/2026</p></header>
-          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2>{task.meeting && <p><strong>Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada</strong></p>}<p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status} · prazo {formatDueDate(task.dueDate)}</strong></p><p>{task.description}</p><dl><dt>{task.status === 'Resolvida' ? 'Solução registrada' : 'Atualização da pendência'}</dt><dd>{task.trackingNote || 'Não informada'}</dd><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
+          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2>{task.meeting && <p><strong>Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada</strong></p>}<p><strong>{task.sector} · prioridade proposta {task.priority} · {task.status} · prazo {formatDueDate(task.dueDate)}</strong></p><p>{task.description}</p><dl><dt>{task.status === 'Resolvida' ? 'Solução registrada' : 'Atualização da pendência'}</dt><dd>{task.trackingNote || 'Não informada'}</dd><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
         </section>
       </main>
 

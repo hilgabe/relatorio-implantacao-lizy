@@ -9,7 +9,6 @@ export function mapCustomTask(row) {
     title: row.title,
     description: row.description,
     sector: row.sector,
-    owner: row.owner,
     priority: row.priority,
     status: row.status,
     origin: `Solicitação aberta no painel por ${row.requester} em ${dateLabel}`,

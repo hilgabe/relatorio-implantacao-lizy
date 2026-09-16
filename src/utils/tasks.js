@@ -12,7 +12,6 @@ export function filterTasks(tasks, filters) {
     if (filters.sector && task.sector !== filters.sector) return false
     if (filters.status && task.status !== filters.status) return false
     if (filters.priority && task.priority !== filters.priority) return false
-    if (filters.owner && (task.owner || 'Não informado') !== filters.owner) return false
     if (filters.resolution === 'pending' && task.status === 'Resolvida') return false
     if (filters.resolution === 'resolved' && task.status !== 'Resolvida') return false
     const deadline = getDeadlineInfo(task)
@@ -75,7 +74,7 @@ export function buildReportText(tasks, generatedAt = new Date()) {
     lines.push(
       `${task.id} — ${task.title}`,
       task.meeting ? 'Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada' : null,
-      `Setor: ${task.sector} | Responsável: ${task.owner || 'Não informado'} | Prioridade proposta: ${task.priority} | Estado: ${task.status} | Prazo: ${formatDueDate(task.dueDate)}`,
+      `Setor: ${task.sector} | Prioridade proposta: ${task.priority} | Estado: ${task.status} | Prazo: ${formatDueDate(task.dueDate)}`,
       `Solicitação: ${task.description}`,
       `Origem: ${task.origin}`,
       `Evidência/referência: ${task.evidence}`,

@@ -7,7 +7,6 @@ const row = {
   description: 'Descrição completa da solicitação.',
   sector: 'Comercial',
   requester: 'Gabriel',
-  owner: 'Alice',
   priority: 'Alta',
   status: 'Nova',
   reference: 'OS 123',

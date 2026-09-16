@@ -28,16 +28,12 @@ describe('filtros e relatório', () => {
     expect(result.map((task) => task.id)).toEqual(['ALM-002', 'ALM-007'])
   })
 
-  it('filtra as solicitações atribuídas à Alice', () => {
-    const result = filterTasks(tasks, { scope: 'current', query: '', sector: '', status: '', priority: '', owner: 'Alice' })
-    expect(result.map((task) => task.id)).toEqual(['COM-001', 'COM-002', 'COM-003'])
-  })
-
   it('gera texto compartilhável com origem e próximo passo', () => {
     const report = buildReportText([tasks[0]], new Date('2026-08-25T12:00:00'))
     expect(report).toContain('ALM-001')
     expect(report).toContain('Almoxarifado - arquivo recebido')
     expect(report).toContain('Próximo passo sugerido')
+    expect(report).not.toContain('Responsável:')
   })
 
   it('identifica explicitamente os itens da pauta da reunião no relatório', () => {
