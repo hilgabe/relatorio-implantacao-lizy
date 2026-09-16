@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { tasks } from '../data/tasks'
-import { buildReportText, filterTasks, normalizeText } from './tasks'
+import { buildReportText, filterTasks, formatDueDate, getDeadlineInfo, normalizeText, sortTasks } from './tasks'
 
 describe('base de solicitações', () => {
   it('mantém demandas operacionais, pauta da reunião e histórico separados', () => {
@@ -45,5 +45,31 @@ describe('filtros e relatório', () => {
     const report = buildReportText([meetingTask], new Date('2026-09-15T12:00:00'))
     expect(report).toContain('pauta da reunião com o suporte Lizy')
     expect(meetingTask.meeting).toBe(true)
+  })
+
+  it('distingue pendentes de resolvidas', () => {
+    const sample = [
+      { ...tasks[0], id: 'A', status: 'Resolvida' },
+      { ...tasks[1], id: 'B', status: 'Em análise' },
+    ]
+    expect(filterTasks(sample, { resolution: 'pending' }).map((task) => task.id)).toEqual(['B'])
+    expect(filterTasks(sample, { resolution: 'resolved' }).map((task) => task.id)).toEqual(['A'])
+  })
+
+  it('classifica prazo vencido, próximo e não definido', () => {
+    const today = new Date(2026, 8, 16)
+    expect(getDeadlineInfo({ dueDate: null, status: 'Em análise' }, today).tone).toBe('none')
+    expect(getDeadlineInfo({ dueDate: '2026-09-15', status: 'Em análise' }, today).tone).toBe('overdue')
+    expect(getDeadlineInfo({ dueDate: '2026-09-20', status: 'Em análise' }, today).tone).toBe('soon')
+    expect(formatDueDate('2026-09-20')).toBe('20/09/2026')
+  })
+
+  it('ordena pendências por prioridade e deixa resolvidas ao final', () => {
+    const ordered = sortTasks([
+      { id: '3', priority: 'Alta', status: 'Resolvida' },
+      { id: '2', priority: 'Média', status: 'Em análise' },
+      { id: '1', priority: 'Altíssima', status: 'Em análise' },
+    ])
+    expect(ordered.map((task) => task.id)).toEqual(['1', '2', '3'])
   })
 })

@@ -3,7 +3,9 @@ import {
   AlertTriangle,
   ArrowRight,
   BarChart3,
+  CalendarDays,
   Check,
+  CheckCircle2,
   ChevronDown,
   ClipboardCopy,
   Download,
@@ -19,6 +21,7 @@ import {
   Printer,
   Radio,
   RotateCcw,
+  Save,
   Search,
   ShieldCheck,
   ShoppingCart,
@@ -29,17 +32,61 @@ import {
 import { HISTORY_TOTAL, MEETING_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
 import { mapCustomTask, upsertCustomTask } from './lib/requests'
 import { isSupabaseConfigured, supabase } from './lib/supabase'
-import { mergeTaskStatuses, statusMap } from './lib/statuses'
-import { buildReportText, filterTasks } from './utils/tasks'
+import { mergeTaskTracking, trackingMap } from './lib/statuses'
+import { buildReportText, filterTasks, formatDueDate, getDeadlineInfo, sortTasks } from './utils/tasks'
 
-const STORAGE_KEY = 'eletrica-visao-lizy-status-v1'
+const STORAGE_KEY = 'eletrica-visao-lizy-tracking-v2'
+const LEGACY_STORAGE_KEY = 'eletrica-visao-lizy-status-v1'
 
-function loadStatuses() {
+function loadTracking() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    if (Object.keys(current).length) return current
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || '{}')
+    return Object.fromEntries(Object.entries(legacy).map(([id, status]) => [id, { status }]))
   } catch {
     return {}
   }
+}
+
+function priorityType(priority) {
+  return `priority-${priority.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`
+}
+
+function statusType(status) {
+  return status === 'Resolvida' ? 'resolved' : 'pending'
+}
+
+function noteTemplates(task) {
+  const owner = task.owner && task.owner !== 'Não informado' ? task.owner : 'responsável'
+  if (task.status === 'Resolvida') {
+    return [
+      'Ajuste realizado e validado com a equipe responsável.',
+      'Orientação repassada e procedimento confirmado com o solicitante.',
+      'Configuração corrigida; funcionamento testado e normalizado.',
+      'Não foi necessário alterar o sistema; o procedimento correto foi orientado e validado.',
+    ]
+  }
+  if (task.status === 'Aguardando Lizy') {
+    return [
+      'Aguardando retorno da equipe Lizy sobre a análise e o próximo passo.',
+      'Solicitação encaminhada à equipe Lizy; aguardando previsão para o ajuste.',
+      'Aguardando validação da regra pela equipe Lizy antes de prosseguir.',
+    ]
+  }
+  if (task.status === 'Em análise') {
+    return [
+      'Situação em análise para identificar a causa e definir a solução.',
+      `Aguardando informações de ${owner} para concluir a análise.`,
+      'Teste controlado pendente para reproduzir o comportamento informado.',
+      'Reunião necessária para alinhar a regra antes de solicitar a alteração.',
+    ]
+  }
+  return [
+    'Solicitação registrada e aguardando triagem.',
+    `Aguardando retorno de ${owner} para iniciar o atendimento.`,
+    'Aguardando definição do responsável e da data de atendimento.',
+  ]
 }
 
 function Badge({ type, children }) {
@@ -59,8 +106,21 @@ function SummaryCard({ icon: Icon, label, value, detail, tone = 'blue' }) {
   )
 }
 
-function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
+function DeadlineBadge({ task }) {
+  const deadline = getDeadlineInfo(task)
+  return (
+    <span className={`deadline deadline--${deadline.tone}`}>
+      <CalendarDays size={14} aria-hidden="true" />
+      <span><strong>{deadline.label}</strong><small>{deadline.detail}</small></span>
+    </span>
+  )
+}
+
+function DetailPanel({ task, canEdit, onClose, onTrackingChange }) {
+  const [noteDraft, setNoteDraft] = useState(task?.trackingNote || '')
+
   if (!task) return null
+  const templates = noteTemplates(task)
   return (
     <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <aside className="drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title">
@@ -74,19 +134,55 @@ function DetailPanel({ task, canEdit, onClose, onStatusChange }) {
         <div className="drawer__body">
           <div className="detail-badges">
             {task.meeting && <Badge type="meeting">Pauta da reunião</Badge>}
-            <Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge>
+            <Badge type={priorityType(task.priority)}>{task.priority}</Badge>
+            <Badge type={statusType(task.status)}>{task.status === 'Resolvida' ? 'Resolvida' : 'Pendente'}</Badge>
             <Badge type="sector">{task.sector}</Badge>
           </div>
           <h2 id="detail-title">{task.title}</h2>
           <p className="detail-description">{task.description}</p>
 
-          <label className="field-label" htmlFor="drawer-status">Estado compartilhado</label>
-          <div className="select-wrap drawer-status">
-            <select id="drawer-status" disabled={!canEdit} value={task.status} onChange={(event) => onStatusChange(task.id, event.target.value)}>
-              {STATUSES.map((status) => <option key={status}>{status}</option>)}
-            </select>
-            <ChevronDown size={16} aria-hidden="true" />
+          <div className="tracking-editor">
+            <label>
+              <span className="field-label">Estado compartilhado</span>
+              <span className={`select-wrap drawer-status status-control status-control--${statusType(task.status)}`}>
+                <select disabled={!canEdit} value={task.status} onChange={(event) => onTrackingChange(task.id, { status: event.target.value })}>
+                  {STATUSES.map((status) => <option key={status}>{status}</option>)}
+                </select>
+                <ChevronDown size={16} aria-hidden="true" />
+              </span>
+            </label>
+            <label>
+              <span className="field-label">Prioridade</span>
+              <span className="select-wrap drawer-status">
+                <select disabled={!canEdit} value={task.priority} onChange={(event) => onTrackingChange(task.id, { priority: event.target.value })}>
+                  {PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}
+                </select>
+                <ChevronDown size={16} aria-hidden="true" />
+              </span>
+            </label>
+            <label className="deadline-editor">
+              <span className="field-label">Data de prazo</span>
+              <input disabled={!canEdit} type="date" value={task.dueDate || ''} onChange={(event) => onTrackingChange(task.id, { dueDate: event.target.value || null })} />
+              <DeadlineBadge task={task} />
+            </label>
           </div>
+
+          <section className={`tracking-note tracking-note--${statusType(task.status)}`} aria-labelledby="tracking-note-title">
+            <div className="tracking-note__heading">
+              <div><span className="field-label">Registro do acompanhamento</span><h3 id="tracking-note-title">{task.status === 'Resolvida' ? 'O que foi solucionado?' : 'Por que ainda está pendente?'}</h3></div>
+              {task.status === 'Resolvida' ? <CheckCircle2 size={20} /> : <FileClock size={20} />}
+            </div>
+            <label className="tracking-note__template">
+              <span className="sr-only">Usar texto pronto</span>
+              <select disabled={!canEdit} defaultValue="" onChange={(event) => { if (event.target.value) setNoteDraft(event.target.value); event.target.value = '' }}>
+                <option value="">Escolher um texto pronto…</option>
+                {templates.map((template) => <option key={template} value={template}>{template}</option>)}
+              </select>
+              <ChevronDown size={16} aria-hidden="true" />
+            </label>
+            <textarea disabled={!canEdit} maxLength="1500" rows="4" value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder={task.status === 'Resolvida' ? 'Descreva a solução aplicada, o que foi corrigido e como foi validado.' : 'Registre o que foi conversado, de quem depende e qual é o próximo passo.'} />
+            <div className="tracking-note__footer"><span>{noteDraft.length}/1500</span><button type="button" disabled={!canEdit || noteDraft === (task.trackingNote || '')} onClick={() => onTrackingChange(task.id, { trackingNote: noteDraft.trim() })}><Save size={15} /> Salvar registro</button></div>
+          </section>
 
           <dl className="detail-list">
             <div><dt>Responsável</dt><dd>{task.owner || 'Não informado'}</dd></div>
@@ -150,6 +246,7 @@ function RequestForm({ busy, onSubmit, onView, success }) {
           <label className="form-field"><span>Setor ou módulo *</span><input name="sector" required minLength="2" maxLength="80" list="sector-options" placeholder="Ex.: Comercial" /><datalist id="sector-options"><option value="Almoxarifado" /><option value="Aquisição" /><option value="Comercial" /><option value="Financeiro" /><option value="Peritagem" /><option value="PCP" /><option value="Produção" /></datalist></label>
           <label className="form-field"><span>Responsável *</span><input name="owner" required minLength="2" maxLength="100" list="owner-options" defaultValue="A definir" /><datalist id="owner-options"><option value="Alice" /><option value="Equipe Lizy" /><option value="A definir" /></datalist></label>
           <label className="form-field"><span>Prioridade sugerida *</span><select name="priority" required defaultValue="Média">{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="form-field"><span>Prazo desejado</span><input name="dueDate" type="date" /><small>Opcional. Pode ser definido ou alterado depois.</small></label>
           <label className="form-field form-field--full"><span>Descrição e contexto *</span><textarea name="description" required minLength="10" maxLength="2000" rows="5" placeholder="Explique onde acontece, como funciona hoje e o que precisa ser alterado." /></label>
           <label className="form-field form-field--full"><span>Impacto do problema *</span><textarea name="impact" required minLength="5" maxLength="1000" rows="3" placeholder="Explique o que essa situação dificulta ou impede na operação." /></label>
           <label className="form-field form-field--full"><span>Resultado esperado *</span><textarea name="expectedResult" required minLength="5" maxLength="1500" rows="3" placeholder="Descreva como deve ficar e, se houver, o que não deve ser alterado." /></label>
@@ -171,8 +268,10 @@ function App() {
   const [status, setStatus] = useState('')
   const [priority, setPriority] = useState('')
   const [owner, setOwner] = useState('')
-  const [savedStatuses, setSavedStatuses] = useState(loadStatuses)
-  const [remoteStatuses, setRemoteStatuses] = useState({})
+  const [resolution, setResolution] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [savedTracking, setSavedTracking] = useState(loadTracking)
+  const [remoteTracking, setRemoteTracking] = useState({})
   const [customRows, setCustomRows] = useState([])
   const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
   const [accessCode, setAccessCode] = useState('')
@@ -186,14 +285,14 @@ function App() {
 
   const customTasks = useMemo(() => customRows.map(mapCustomTask), [customRows])
   const tasks = useMemo(
-    () => mergeTaskStatuses([...initialTasks, ...customTasks], remoteStatuses, savedStatuses, isSupabaseConfigured),
-    [customTasks, remoteStatuses, savedStatuses],
+    () => mergeTaskTracking([...initialTasks, ...customTasks], remoteTracking, savedTracking, isSupabaseConfigured),
+    [customTasks, remoteTracking, savedTracking],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
   const owners = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.owner || 'Não informado'))], [tasks, scope])
   const visibleTasks = useMemo(
-    () => filterTasks(tasks, { scope, query, sector, status, priority, owner }),
-    [tasks, scope, query, sector, status, priority, owner],
+    () => sortTasks(filterTasks(tasks, { scope, query, sector, status, priority, owner, resolution, deadline })),
+    [tasks, scope, query, sector, status, priority, owner, resolution, deadline],
   )
   const selectedTask = tasks.find((task) => task.id === selectedId)
   const currentTasks = tasks.filter((task) => task.scope === 'current')
@@ -201,9 +300,11 @@ function App() {
   const currentTotal = currentTasks.length
   const meetingTotal = meetingTasks.length
   const activeTotal = currentTotal + meetingTotal
-  const criticalCount = currentTasks.filter((task) => task.priority === 'Crítica').length
-  const awaitingCount = currentTasks.filter((task) => task.status === 'Aguardando Lizy').length
+  const topPriorityCount = currentTasks.filter((task) => ['Altíssima', 'Crítica'].includes(task.priority) && task.status !== 'Resolvida').length
+  const pendingCount = currentTasks.filter((task) => task.status !== 'Resolvida').length
   const resolvedCount = currentTasks.filter((task) => task.status === 'Resolvida').length
+  const overdueCount = currentTasks.filter((task) => getDeadlineInfo(task).tone === 'overdue').length
+  const noDeadlineCount = currentTasks.filter((task) => !task.dueDate && task.status !== 'Resolvida').length
 
   useEffect(() => {
     if (!supabase) return undefined
@@ -211,7 +312,7 @@ function App() {
     let active = true
     const load = async () => {
       const [statusesResult, requestsResult] = await Promise.all([
-        supabase.from('task_statuses').select('task_id,status'),
+        supabase.from('task_statuses').select('task_id,status,priority,due_date,tracking_note'),
         supabase.from('custom_tasks').select('*').order('created_at', { ascending: false }),
       ])
       if (!active) return
@@ -219,7 +320,7 @@ function App() {
         setConnectionState('error')
         return
       }
-      setRemoteStatuses(statusMap(statusesResult.data))
+      setRemoteTracking(trackingMap(statusesResult.data))
       setCustomRows(requestsResult.data || [])
       setConnectionState('connected')
     }
@@ -230,7 +331,7 @@ function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_statuses' }, (payload) => {
         const row = payload.new
         if (row?.task_id && row?.status) {
-          setRemoteStatuses((current) => ({ ...current, [row.task_id]: row.status }))
+          setRemoteTracking((current) => ({ ...current, ...trackingMap([row]) }))
         }
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'custom_tasks' }, (payload) => {
@@ -249,39 +350,52 @@ function App() {
     window.setTimeout(() => setNotice(''), 2600)
   }
 
-  async function updateStatus(id, value) {
+  async function updateTracking(id, changes) {
+    const task = tasks.find((item) => item.id === id)
+    if (!task) return
+    const nextTracking = {
+      status: changes.status ?? task.status,
+      priority: changes.priority ?? task.priority,
+      dueDate: Object.prototype.hasOwnProperty.call(changes, 'dueDate') ? changes.dueDate : (task.dueDate || null),
+      trackingNote: Object.prototype.hasOwnProperty.call(changes, 'trackingNote') ? changes.trackingNote : (task.trackingNote || ''),
+    }
+
     if (supabase) {
       if (!isEditorUnlocked || !accessCode) {
         setShowCodePrompt(true)
-        flash('Informe o código de acesso para alterar os estados.')
+        flash('Informe o código de acesso para editar o acompanhamento.')
         return
       }
-      const { error } = await supabase.rpc('update_task_status', {
+      const { error } = await supabase.rpc('update_task_tracking', {
         p_task_id: id,
-        p_status: value,
+        p_status: nextTracking.status,
+        p_priority: nextTracking.priority,
+        p_due_date: nextTracking.dueDate || null,
+        p_tracking_note: nextTracking.trackingNote || null,
         p_code: accessCode,
       })
       if (error) {
         setIsEditorUnlocked(false)
         setAccessCode('')
         setShowCodePrompt(true)
-        flash('Não foi possível salvar o estado compartilhado.')
+        flash('Não foi possível salvar a alteração compartilhada.')
         return
       }
-      setRemoteStatuses((current) => ({ ...current, [id]: value }))
-      flash('Estado compartilhado e atualizado ao vivo.')
+      setRemoteTracking((current) => ({ ...current, [id]: nextTracking }))
+      flash('Acompanhamento atualizado ao vivo.')
       return
     }
-    const next = { ...savedStatuses, [id]: value }
-    setSavedStatuses(next)
+    const next = { ...savedTracking, [id]: nextTracking }
+    setSavedTracking(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    flash('Estado salvo neste dispositivo.')
+    flash('Alteração salva neste dispositivo.')
   }
 
-  function resetLocalStatuses() {
+  function resetLocalTracking() {
     localStorage.removeItem(STORAGE_KEY)
-    setSavedStatuses({})
-    flash('Estados iniciais restaurados.')
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
+    setSavedTracking({})
+    flash('Acompanhamento inicial restaurado.')
   }
 
   async function unlockEditing(event) {
@@ -317,8 +431,8 @@ function App() {
   }
 
   function exportCsv() {
-    const headers = ['ID', 'Título', 'Classificação', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
-    const rows = visibleTasks.map((task) => [task.id, task.title, task.meeting ? 'Pauta da reunião com o suporte Lizy' : 'Demanda operacional', task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
+    const headers = ['ID', 'Título', 'Classificação', 'Descrição', 'Setor', 'Responsável', 'Prioridade proposta', 'Estado', 'Prazo', 'Atualização ou solução', 'Origem', 'Evidência', 'Impacto', 'Próximo passo', 'Anexos']
+    const rows = visibleTasks.map((task) => [task.id, task.title, task.meeting ? 'Pauta da reunião com o suporte Lizy' : 'Demanda operacional', task.description, task.sector, task.owner || 'Não informado', task.priority, task.status, formatDueDate(task.dueDate), task.trackingNote || 'Não informada', task.origin, task.evidence, task.impact, task.nextStep, task.attachments?.map((attachment) => attachment.caption).join(' | ') || 'Nenhum'])
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(';')).join('\n')
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
     const link = document.createElement('a')
@@ -335,6 +449,8 @@ function App() {
     setStatus('')
     setPriority('')
     setOwner('')
+    setResolution('')
+    setDeadline('')
   }
 
   function openRequestForm() {
@@ -375,10 +491,31 @@ function App() {
       return
     }
 
+    const dueDate = values.get('dueDate') || null
+    let dueDateSaved = true
+    if (dueDate) {
+      const { error: trackingError } = await supabase.rpc('update_task_tracking', {
+        p_task_id: data.id,
+        p_status: data.status,
+        p_priority: data.priority,
+        p_due_date: dueDate,
+        p_tracking_note: null,
+        p_code: values.get('code'),
+      })
+      if (!trackingError) {
+        setRemoteTracking((current) => ({
+          ...current,
+          [data.id]: { status: data.status, priority: data.priority, dueDate, trackingNote: '' },
+        }))
+      } else {
+        dueDateSaved = false
+      }
+    }
+
     setCustomRows((current) => upsertCustomTask(current, data))
-    setRequestSuccess(mapCustomTask(data))
+    setRequestSuccess({ ...mapCustomTask(data), dueDate })
     form.reset()
-    flash(`${data.id} adicionada ao painel.`)
+    flash(dueDateSaved ? `${data.id} adicionada ao painel.` : `${data.id} criada, mas o prazo precisa ser salvo novamente.`)
   }
 
   function viewCreatedRequest() {
@@ -397,7 +534,7 @@ function App() {
         <div className="topbar__meta">
           {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
-          <span className="topbar__date">Base atualizada em 15/09/2026</span>
+          <span className="topbar__date">Base atualizada em 16/09/2026</span>
           {isSupabaseConfigured && (isEditorUnlocked ? (
             <button className="session-button" onClick={lockEditing}><Lock size={14} /> Bloquear edição</button>
           ) : (
@@ -429,14 +566,14 @@ function App() {
           <div className="notice-card">
             {isSupabaseConfigured ? <Radio size={19} /> : <AlertTriangle size={19} />}
             <p>{isSupabaseConfigured
-              ? <><strong>Status compartilhado:</strong> a visualização é atualizada ao vivo. Para alterar, libere a edição com o código compartilhado.</>
+              ? <><strong>Acompanhamento compartilhado:</strong> estados, prioridades e prazos são atualizados ao vivo. Para alterar, libere a edição com o código compartilhado.</>
               : <><strong>Critério de leitura:</strong> prioridades são uma classificação proposta pela Elétrica Visão. Alterações de estado feitas aqui ficam somente neste dispositivo; o link público sempre inicia com a base consolidada.</>
             }</p>
           </div>
 
           {showCodePrompt && isSupabaseConfigured && !isEditorUnlocked && (
             <form className="login-panel" onSubmit={unlockEditing}>
-              <div><strong>Liberar alteração de estados</strong><span>Digite o código compartilhado de quatro números.</span></div>
+              <div><strong>Liberar edição do acompanhamento</strong><span>Digite o código compartilhado de quatro números.</span></div>
               <label><span className="sr-only">Código de acesso</span><input type="password" inputMode="numeric" autoComplete="off" required minLength="4" maxLength="4" pattern="[0-9]{4}" value={accessCode} onChange={(event) => setAccessCode(event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="••••" /></label>
               <button type="submit" disabled={codeBusy || accessCode.length !== 4}>{codeBusy ? 'Verificando…' : 'Liberar edição'}</button>
             </form>
@@ -445,9 +582,10 @@ function App() {
           <div className="summary-grid">
             <SummaryCard icon={PackageCheck} label="Demandas operacionais" value={currentTotal} detail={`${customRows.length} abertas pelo painel`} />
             <SummaryCard icon={MessagesSquare} label="Pauta da reunião" value={meetingTotal} detail="Separada das demais" tone="purple" />
-            <SummaryCard icon={AlertTriangle} label="Prioridade crítica" value={criticalCount} detail="Classificação proposta" tone="orange" />
-            <SummaryCard icon={FileClock} label="Aguardando Lizy" value={awaitingCount} detail={isSupabaseConfigured ? 'Estado compartilhado' : 'Estado local atual'} tone="gold" />
-            <SummaryCard icon={Check} label="Resolvidas" value={resolvedCount} detail={`de ${currentTotal} demandas atuais`} tone="green" />
+            <SummaryCard icon={FileClock} label="Ainda pendentes" value={pendingCount} detail="Aguardam resolução" tone="gold" />
+            <SummaryCard icon={AlertTriangle} label="Prioridade máxima" value={topPriorityCount} detail="Altíssima ou crítica" tone="orange" />
+            <SummaryCard icon={CalendarDays} label="Prazos vencidos" value={overdueCount} detail={`${noDeadlineCount} sem prazo definido`} tone="red" />
+            <SummaryCard icon={CheckCircle2} label="Resolvidas" value={resolvedCount} detail={`de ${currentTotal} demandas atuais`} tone="green" />
           </div>
 
           <div className="workspace" id="solicitacoes">
@@ -483,7 +621,18 @@ function App() {
 
             {scope === 'create' ? (
               <RequestForm busy={requestBusy} onSubmit={createRequest} success={requestSuccess} onView={viewCreatedRequest} />
-            ) : <><div className="filters">
+            ) : <>
+            <div className="reading-guide" aria-label="Legenda de prioridade e situação">
+              <strong>Leitura rápida</strong>
+              <span className="reading-guide__priorities">{PRIORITIES.map((item) => <Badge key={item} type={priorityType(item)}>{item}</Badge>)}</span>
+              <span className="reading-guide__status"><CheckCircle2 size={15} /> Verde indica item resolvido; os demais continuam pendentes.</span>
+            </div>
+            <div className="resolution-switch" aria-label="Filtrar por resolução">
+              <button className={resolution === '' ? 'active' : ''} onClick={() => setResolution('')}>Todos <span>{scope === 'current' ? currentTotal : tasks.filter((task) => task.scope === scope).length}</span></button>
+              <button className={resolution === 'pending' ? 'active pending' : 'pending'} onClick={() => setResolution('pending')}>Pendentes <span>{tasks.filter((task) => task.scope === scope && task.status !== 'Resolvida').length}</span></button>
+              <button className={resolution === 'resolved' ? 'active resolved' : 'resolved'} onClick={() => setResolution('resolved')}>Resolvidos <span>{tasks.filter((task) => task.scope === scope && task.status === 'Resolvida').length}</span></button>
+            </div>
+            <div className="filters">
               <label className="search-box">
                 <span className="sr-only">Pesquisar</span><Search size={18} />
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar por texto, OS, RE, CNPJ, código ou identificador..." />
@@ -493,26 +642,29 @@ function App() {
               <label className="select-wrap"><span className="sr-only">Filtrar responsável</span><select value={owner} onChange={(event) => setOwner(event.target.value)}><option value="">Todos os responsáveis</option>{owners.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar estado</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Todos os estados</option>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
               <label className="select-wrap"><span className="sr-only">Filtrar prioridade</span><select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Todas as prioridades</option>{PRIORITIES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={16} /></label>
-              {(query || sector || status || priority || owner) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
+              <label className="select-wrap"><span className="sr-only">Filtrar prazo</span><select value={deadline} onChange={(event) => setDeadline(event.target.value)}><option value="">Todos os prazos</option><option value="overdue">Atrasados</option><option value="soon">Vencem em até 7 dias</option><option value="scheduled">Prazo definido</option><option value="none">Sem prazo</option></select><ChevronDown size={16} /></label>
+              {(query || sector || status || priority || owner || resolution || deadline) && <button className="clear-button" onClick={clearFilters}><RotateCcw size={15} /> Limpar</button>}
             </div>
 
             <div className="task-table" role="table" aria-label="Solicitações filtradas">
               <div className="task-table__head" role="row">
-                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
+                <span role="columnheader">Solicitação</span><span role="columnheader">Setor</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Prazo</span><span role="columnheader">Estado</span><span role="columnheader">Detalhes</span>
               </div>
               {visibleTasks.length ? visibleTasks.map((task) => (
-                <article className={`task-row${task.meeting ? ' task-row--meeting' : ''}`} role="row" key={task.id}>
+                <article className={`task-row task-row--${statusType(task.status)} task-row--${priorityType(task.priority)}${task.meeting ? ' task-row--meeting' : ''}`} role="row" key={task.id}>
                   <div className="task-main" role="cell">
-                    <div className="task-flags"><span className="task-id">{task.id}</span>{task.meeting && <Badge type="meeting">Reunião com suporte</Badge>}</div>
+                    <div className="task-flags"><span className="task-id">{task.id}</span><Badge type={statusType(task.status)}>{task.status === 'Resolvida' ? 'Resolvida' : 'Pendente'}</Badge>{task.meeting && <Badge type="meeting">Reunião com suporte</Badge>}</div>
                     <h3>{task.title}</h3>
                     <p>{task.description}</p>
+                    <p className={`task-update${task.trackingNote ? '' : ' task-update--empty'}`}><MessagesSquare size={13} /> <strong>{task.status === 'Resolvida' ? 'Solução:' : 'Atualização:'}</strong> {task.trackingNote || 'ainda não registrada'}</p>
                     <small><ExternalLink size={13} /> {task.evidence}</small>
                   </div>
                   <div role="cell"><Badge type="sector">{task.sector}</Badge></div>
                   <div className="owner-cell" role="cell"><UserRound size={14} /> {task.owner || 'Não informado'}</div>
-                  <div role="cell"><Badge type={`priority-${task.priority.toLowerCase().replace('í', 'i')}`}>{task.priority}</Badge></div>
+                  <div role="cell"><Badge type={priorityType(task.priority)}>{task.priority}</Badge></div>
+                  <div role="cell"><DeadlineBadge task={task} /></div>
                   <div role="cell">
-                    <label className="select-wrap select-wrap--status"><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !isEditorUnlocked} value={task.status} onChange={(event) => updateStatus(task.id, event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
+                    <label className={`select-wrap select-wrap--status status-control status-control--${statusType(task.status)}`}><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !isEditorUnlocked} value={task.status} onChange={(event) => updateTracking(task.id, { status: event.target.value })}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
                   </div>
                   <div role="cell"><button className="detail-button" onClick={() => setSelectedId(task.id)}>Ver item <ArrowRight size={15} /></button></div>
                 </article>
@@ -522,8 +674,8 @@ function App() {
             </div>
 
             <footer className="workspace__footer">
-              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem os estados compartilhados; a alteração exige o código de acesso.</p> : <p><strong>Persistência local:</strong> os estados alterados não são compartilhados com outros usuários.</p>}
-              {!isSupabaseConfigured && <button onClick={resetLocalStatuses}><RotateCcw size={14} /> Restaurar estados iniciais</button>}
+              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem estado, prioridade, prazo e registro do acompanhamento; a alteração exige o código de acesso.</p> : <p><strong>Persistência local:</strong> as alterações de acompanhamento não são compartilhadas com outros usuários.</p>}
+              {!isSupabaseConfigured && <button onClick={resetLocalTracking}><RotateCcw size={14} /> Restaurar acompanhamento inicial</button>}
             </footer>
             </>}
           </div>
@@ -535,18 +687,18 @@ function App() {
             <div><MessagesSquare size={20} /><span><strong>{MEETING_TOTAL} itens</strong>Pauta PCP / Peritagem</span></div>
             <div><FilePlus2 size={20} /><span><strong>{customRows.length} itens</strong>Abertos pelo painel</span></div>
             <div><FileClock size={20} /><span><strong>{HISTORY_TOTAL} registros</strong>Histórico a revalidar</span></div>
-            <p>Última consolidação<br /><strong>15 de setembro de 2026</strong></p>
+            <p>Última consolidação<br /><strong>16 de setembro de 2026</strong></p>
           </section>
         </section>
 
         <section className="print-report" aria-hidden="true">
-          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 15/09/2026</p></header>
-          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2>{task.meeting && <p><strong>Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada</strong></p>}<p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status}</strong></p><p>{task.description}</p><dl><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
+          <header><h1>Elétrica Visão × Lizy</h1><p>Relatório de solicitações · base de 16/09/2026</p></header>
+          {visibleTasks.map((task) => <article key={task.id}><h2>{task.id} · {task.title}</h2>{task.meeting && <p><strong>Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada</strong></p>}<p><strong>{task.sector} · responsável {task.owner || 'Não informado'} · prioridade proposta {task.priority} · {task.status} · prazo {formatDueDate(task.dueDate)}</strong></p><p>{task.description}</p><dl><dt>{task.status === 'Resolvida' ? 'Solução registrada' : 'Atualização da pendência'}</dt><dd>{task.trackingNote || 'Não informada'}</dd><dt>Origem</dt><dd>{task.origin}</dd><dt>Evidência/referência</dt><dd>{task.evidence}</dd><dt>Impacto</dt><dd>{task.impact}</dd><dt>Próximo passo sugerido</dt><dd>{task.nextStep}</dd>{task.attachments?.length > 0 && <><dt>Anexos</dt><dd>{task.attachments.map((attachment) => attachment.caption).join(' | ')}</dd></>}</dl></article>)}
         </section>
       </main>
 
       {notice && <div className="toast" role="status"><Check size={16} /> {notice}</div>}
-      <DetailPanel task={selectedTask} canEdit={!isSupabaseConfigured || isEditorUnlocked} onClose={() => setSelectedId(null)} onStatusChange={updateStatus} />
+      <DetailPanel key={selectedTask ? `${selectedTask.id}:${selectedTask.trackingNote || ''}` : 'empty'} task={selectedTask} canEdit={!isSupabaseConfigured || isEditorUnlocked} onClose={() => setSelectedId(null)} onTrackingChange={updateTracking} />
     </>
   )
 }

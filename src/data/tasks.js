@@ -1,5 +1,5 @@
 export const STATUSES = ['Nova', 'Em análise', 'Aguardando Lizy', 'Resolvida']
-export const PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa']
+export const PRIORITIES = ['Altíssima', 'Crítica', 'Alta', 'Média', 'Baixa']
 
 const almoxarifado = 'Almoxarifado - arquivo recebido'
 const aquisicao = 'Aquisição - arquivo recebido'
