@@ -5,7 +5,8 @@ const almoxarifado = 'Almoxarifado - arquivo recebido'
 const aquisicao = 'Aquisição - arquivo recebido'
 const historico = 'Histórico da implantação - requer revalidação'
 const comercial = 'Solicitações comerciais recebidas em 10/09/2026'
-const reuniaoPcp = 'Pauta da reunião com o suporte Lizy - registrada em 15/09/2026'
+const reuniaoPcp = 'Demandas de PCP / Peritagem registradas em 15/09/2026, originalmente na pauta da reunião'
+const comercialNovo = 'Solicitações comerciais informadas em 22/09/2026'
 
 export const tasks = [
   {
@@ -158,14 +159,68 @@ export const tasks = [
     scope: 'current',
   },
   {
+    id: 'COM-004',
+    title: 'Manter peritagem e injeção apenas como modelo',
+    description: 'Na área de Orçamentos, retirar peritagem e injeção das opções que podem ser adicionadas ao orçamento. Manter esses registros somente como modelo de referência.',
+    sector: 'Comercial', priority: 'Média', status: 'Nova', origin: comercialNovo,
+    evidence: 'Orientação comercial informada em 22/09/2026; não foi fornecido print específico deste fluxo.',
+    impact: 'A inclusão dessas opções no orçamento não corresponde ao uso desejado pelo Comercial.',
+    nextStep: 'Identificar as opções de peritagem e injeção em Orçamentos, impedir sua inclusão e validar que continuam disponíveis apenas como modelo.',
+    scope: 'current',
+  },
+  {
+    id: 'COM-005',
+    title: 'Remover o detalhamento da seção Orçamento no PDF',
+    description: 'Na seção “Orçamento” do PDF comercial, retirar a tabela com Descrição, Serviço, Produto, Valor, Desconto e Subtotal. Manter somente o total geral de tudo.',
+    sector: 'Comercial', priority: 'Média', status: 'Nova', origin: comercialNovo,
+    evidence: 'Anexo 2 marca a tabela de Orçamento para remoção e destaca a linha de total geral que deve permanecer.',
+    impact: 'O detalhamento por Serviços e Produtos repete valores que o cliente não precisa visualizar nessa seção.',
+    nextStep: 'Ajustar o modelo do PDF, preservar o total geral e conferir seu valor em uma proposta com serviços e produtos.',
+    attachments: [{ src: '/anexos/comercial-orcamento-total-geral.png', alt: 'PDF comercial com a tabela Orçamento riscada e o total geral destacado', caption: 'Anexo 2 — manter somente o total geral' }],
+    scope: 'current',
+  },
+  {
+    id: 'COM-006',
+    title: 'Remover o total da coluna de valor unitário em Produtos',
+    description: 'Na linha TOTAL da tabela de Produtos do PDF comercial, retirar o valor somado exibido abaixo de VL.UNIT. Manter o total da coluna VL.TOT, que representa o valor total dos produtos.',
+    sector: 'Comercial', priority: 'Média', status: 'Nova', origin: comercialNovo,
+    evidence: 'Anexo 3 destaca R$ 60,00 na linha TOTAL sob VL.UNIT como valor a remover.',
+    impact: 'A soma dos preços unitários na linha de total pode confundir a leitura do valor efetivo dos produtos.',
+    nextStep: 'Remover somente o total sob VL.UNIT e validar que o total sob VL.TOT continua correto.',
+    attachments: [{ src: '/anexos/comercial-produtos-total-unitario.png', alt: 'Tabela de Produtos com total sob VL.UNIT destacado para remoção', caption: 'Anexo 3 — retirar o total de VL.UNIT' }],
+    scope: 'current',
+  },
+  {
+    id: 'COM-007',
+    title: 'Mostrar número do item no lugar do código interno em Produtos',
+    description: 'Na tabela de Produtos do PDF comercial, substituir a coluna CÓDIGO, que mostra o código interno do produto, por uma numeração de apresentação ao cliente: Item 1, Item 2, Item 3 e assim por diante, como já ocorre em Serviços.',
+    sector: 'Comercial', priority: 'Média', status: 'Nova', origin: comercialNovo,
+    evidence: 'Anexo 4 destaca a coluna CÓDIGO e os códigos internos 19 e 1909.',
+    impact: 'O código interno não é uma identificação clara para o cliente na proposta.',
+    nextStep: 'Numerar as linhas de Produtos na exibição e conferir a sequência em propostas com vários itens.',
+    attachments: [{ src: '/anexos/comercial-produtos-codigo-item.png', alt: 'Coluna CÓDIGO da tabela Produtos destacada para substituição por Item', caption: 'Anexo 4 — usar Item 1, Item 2 e assim por diante' }],
+    scope: 'current',
+  },
+  {
+    id: 'COM-008',
+    title: 'Reduzir o tamanho das fotos no relatório',
+    description: 'Diminuir um pouco as fotos exibidas na seção “Chegada do equipamento” do documento, preservando sua legibilidade e o enquadramento.',
+    sector: 'Comercial', priority: 'Média', status: 'Nova', origin: comercialNovo,
+    evidence: 'Anexo 5 mostra três fotos grandes na seção “Chegada do equipamento”.',
+    impact: 'As fotos ocupam muito espaço no documento e deixam a seção visualmente extensa.',
+    nextStep: 'Reduzir moderadamente as dimensões das fotos e conferir a leitura das imagens e o layout no PDF gerado.',
+    attachments: [{ src: '/anexos/comercial-fotos-chegada-equipamento.png', alt: 'Seção Chegada do equipamento com três fotos a reduzir', caption: 'Anexo 5 — reduzir moderadamente as fotos' }],
+    scope: 'current',
+  },
+  {
     id: 'PCP-001',
     title: 'Separar o conteúdo das impressões de peritagem e laudos',
     description: 'Corrigir a mistura de informações entre ficha de peritagem, laudo técnico e laudo final. Cada impressão deve apresentar somente o conteúdo correspondente ao documento escolhido.',
     sector: 'PCP / Peritagem', priority: 'Alta', status: 'Em análise', origin: reuniaoPcp,
     evidence: 'Relato operacional de 15/09/2026: as opções do botão Imprimir estão apresentando peritagem, laudo inicial e laudo final em conjunto.',
     impact: 'A mistura de etapas gera documentos extensos, confusos e inadequados para o uso interno ou para o envio ao cliente.',
-    nextStep: 'Na reunião, confirmar os nomes definitivos dos documentos e mapear os campos exclusivos da ficha de peritagem, do laudo técnico do cliente e do laudo final.',
-    meeting: true, scope: 'meeting',
+    nextStep: 'Confirmar os nomes definitivos dos documentos e mapear os campos exclusivos da ficha de peritagem, do laudo técnico do cliente e do laudo final.',
+    scope: 'current',
   },
   {
     id: 'PCP-002',
@@ -175,7 +230,7 @@ export const tasks = [
     evidence: 'Na peritagem, as caixas já identificam os itens aplicáveis, mas o documento gerado não utiliza essa seleção como filtro.',
     impact: 'Itens não aplicáveis deixam o PDF mais longo e dificultam a leitura do que realmente será executado.',
     nextStep: 'Confirmar com o suporte se o gerador de PDF pode filtrar os componentes pelo estado selecionado e validar um caso com itens marcados e desmarcados.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-003',
@@ -185,7 +240,7 @@ export const tasks = [
     evidence: 'Relato operacional: as fotos permanecem visíveis na OS finalizada, mas o controle de seleção para o relatório não aparece.',
     impact: 'A equipe não consegue preparar corretamente o laudo final quando a seleção de imagens precisa ser ajustada após a finalização.',
     nextStep: 'Definir se a seleção de fotos poderá ser alterada diretamente em Finalizados ou se exigirá reabertura controlada da OS.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-004',
@@ -195,7 +250,7 @@ export const tasks = [
     evidence: 'A tela possui previsão de entrega, mas não foi identificada uma previsão específica para a conclusão do serviço do equipamento.',
     impact: 'A produção não dispõe de uma data própria para planejar e acompanhar a conclusão técnica do serviço.',
     nextStep: 'Definir com o suporte o nome do campo, obrigatoriedade, possibilidade de alteração, histórico e documentos em que a data aparecerá.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-005',
@@ -205,7 +260,7 @@ export const tasks = [
     evidence: 'Relato operacional: o campo pode ser preenchido na abertura da OS, pelo Comercial ou pela Peritagem, mas não aparece nos documentos gerados.',
     impact: 'O documento perde o registro do problema informado para o equipamento e reduz o contexto técnico do atendimento.',
     nextStep: 'Confirmar em quais modelos o campo deve aparecer — ficha de peritagem, laudo técnico e/ou laudo final — e testar o conteúdo originado por cada perfil.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-006',
@@ -215,7 +270,7 @@ export const tasks = [
     evidence: 'Hoje esse documento é preparado manualmente no Word. O formato e a diferença em relação ao laudo final ainda precisam ser definidos.',
     impact: 'O processo manual consome tempo e não garante um padrão visual e informacional entre os laudos enviados aos clientes.',
     nextStep: 'Alinhar com Franklin e com o suporte o modelo, campos obrigatórios, fotos, assinatura, nomenclatura e relação com o laudo final antes de solicitar desenvolvimento.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-007',
@@ -226,7 +281,7 @@ export const tasks = [
     impact: 'Sem uma opção própria, a peritagem fica misturada aos laudos ou não pode ser emitida de forma independente.',
     nextStep: 'Confirmar a nomenclatura, a disponibilidade por etapa da OS e o conteúdo da nova impressão, aplicando também o filtro de itens selecionados.',
     attachments: [{ src: '/anexos/pcp-peritagem-botao-imprimir.png', alt: 'Botão Imprimir na área de Serviços', caption: 'Referência visual — botão Imprimir informado na solicitação' }],
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-008',
@@ -236,7 +291,7 @@ export const tasks = [
     evidence: 'Há dúvida operacional sobre a obrigatoriedade atual do balanceamento; o comportamento ainda não foi comprovado.',
     impact: 'Uma validação indevida pode bloquear o fluxo, enquanto uma alteração sem reprodução pode modificar uma regra que já está correta.',
     nextStep: 'Testar uma OS controlada sem balanceamento. Se houver bloqueio, solicitar a retirada da obrigatoriedade; se o campo já for opcional, não alterar.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'PCP-009',
@@ -246,7 +301,7 @@ export const tasks = [
     evidence: 'Relato operacional de inconsistência entre ordens de serviço; ainda não foram fornecidos números de OS para comparação.',
     impact: 'A ausência de um padrão dificulta saber quais documentos deveriam estar disponíveis e pode impedir a emissão necessária.',
     nextStep: 'Comparar OS dos mesmos status e verificar regras de etapa, campos obrigatórios, permissões, versão do registro e motivo de indisponibilidade de cada documento.',
-    meeting: true, scope: 'meeting',
+    scope: 'current',
   },
   {
     id: 'HIS-002',
@@ -269,5 +324,4 @@ export const tasks = [
 ]
 
 export const CURRENT_TOTAL = tasks.filter((task) => task.scope === 'current').length
-export const MEETING_TOTAL = tasks.filter((task) => task.scope === 'meeting').length
 export const HISTORY_TOTAL = tasks.filter((task) => task.scope === 'history').length

@@ -73,7 +73,6 @@ export function buildReportText(tasks, generatedAt = new Date()) {
   tasks.forEach((task) => {
     lines.push(
       `${task.id} — ${task.title}`,
-      task.meeting ? 'Classificação: pauta da reunião com o suporte Lizy — alteração ainda não aprovada' : null,
       `Setor: ${task.sector} | Prioridade proposta: ${task.priority} | Estado: ${task.status} | Prazo: ${formatDueDate(task.dueDate)}`,
       `Solicitação: ${task.description}`,
       `Origem: ${task.origin}`,

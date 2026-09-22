@@ -3,9 +3,9 @@ import { tasks } from '../data/tasks'
 import { buildReportText, filterTasks, formatDueDate, getDeadlineInfo, normalizeText, sortTasks } from './tasks'
 
 describe('base de solicitações', () => {
-  it('mantém demandas operacionais, pauta da reunião e histórico separados', () => {
-    expect(tasks.filter((task) => task.scope === 'current')).toHaveLength(16)
-    expect(tasks.filter((task) => task.scope === 'meeting')).toHaveLength(9)
+  it('inclui as antigas pautas e as novas solicitações comerciais nas demandas atuais', () => {
+    expect(tasks.filter((task) => task.scope === 'current')).toHaveLength(30)
+    expect(tasks.filter((task) => task.scope === 'meeting')).toHaveLength(0)
     expect(tasks.filter((task) => task.scope === 'history')).toHaveLength(2)
   })
 
@@ -36,11 +36,11 @@ describe('filtros e relatório', () => {
     expect(report).not.toContain('Responsável:')
   })
 
-  it('identifica explicitamente os itens da pauta da reunião no relatório', () => {
-    const meetingTask = tasks.find((task) => task.id === 'PCP-001')
-    const report = buildReportText([meetingTask], new Date('2026-09-15T12:00:00'))
-    expect(report).toContain('pauta da reunião com o suporte Lizy')
-    expect(meetingTask.meeting).toBe(true)
+  it('classifica PCP como demanda atual no relatório', () => {
+    const pcpTask = tasks.find((task) => task.id === 'PCP-001')
+    const report = buildReportText([pcpTask], new Date('2026-09-22T12:00:00'))
+    expect(pcpTask.scope).toBe('current')
+    expect(report).not.toContain('Classificação: pauta da reunião')
   })
 
   it('distingue pendentes de resolvidas', () => {
