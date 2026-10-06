@@ -12,3 +12,8 @@ dist/
 .env.*
 !.env.example
 coverage/
+
+# Firebase
+functions/node_modules/
+.firebase/
+*-debug.log
