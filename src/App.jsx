@@ -13,8 +13,6 @@ import {
   FileClock,
   FilePlus2,
   Filter,
-  KeyRound,
-  Lock,
   MessagesSquare,
   PackageCheck,
   Paperclip,
@@ -30,7 +28,7 @@ import {
 } from 'lucide-react'
 import { HISTORY_TOTAL, PRIORITIES, STATUSES, tasks as initialTasks } from './data/tasks'
 import { mapCustomTask, upsertCustomTask } from './lib/requests'
-import { isSupabaseConfigured, supabase } from './lib/supabase'
+import { createRequest as submitRequest, isBackendConfigured, saveTracking, subscribeToData } from './lib/backend'
 import { mergeTaskTracking, trackingMap } from './lib/statuses'
 import { buildReportText, filterTasks, formatDueDate, getDeadlineInfo, sortTasks } from './utils/tasks'
 
@@ -243,8 +241,7 @@ function RequestForm({ busy, onSubmit, onView, success }) {
           <label className="form-field form-field--full"><span>Impacto do problema *</span><textarea name="impact" required minLength="5" maxLength="1000" rows="3" placeholder="Explique o que essa situação dificulta ou impede na operação." /></label>
           <label className="form-field form-field--full"><span>Resultado esperado *</span><textarea name="expectedResult" required minLength="5" maxLength="1500" rows="3" placeholder="Descreva como deve ficar e, se houver, o que não deve ser alterado." /></label>
           <label className="form-field"><span>Referência</span><input name="reference" maxLength="500" placeholder="OS, RE, tela, cliente ou outro exemplo" /></label>
-          <label className="form-field"><span>Link de anexo</span><input name="attachmentUrl" type="url" maxLength="1000" placeholder="https://drive.google.com/..." /><small>Opcional: cole um link acessível para print ou documento.</small></label>
-          <label className="form-field form-field--code"><span>Código de acesso *</span><input name="code" type="password" inputMode="numeric" autoComplete="off" required minLength="4" maxLength="4" pattern="[0-9]{4}" placeholder="••••" /><small>O mesmo código usado para editar os estados.</small></label>
+          <label className="form-field"><span>Link de anexo</span><input name="attachmentUrl" type="url" pattern="https?://.*" maxLength="1000" placeholder="https://drive.google.com/..." /><small>Opcional: cole um link acessível para print ou documento.</small></label>
         </div>
         <label className="public-ack"><input type="checkbox" required /> Confirmo que revisei o pedido e que ele não contém informações confidenciais.</label>
         <div className="request-form__actions"><button className="button button--submit" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Adicionar solicitação'} <ArrowRight size={16} /></button></div>
@@ -264,11 +261,7 @@ function App() {
   const [savedTracking, setSavedTracking] = useState(loadTracking)
   const [remoteTracking, setRemoteTracking] = useState({})
   const [customRows, setCustomRows] = useState([])
-  const [connectionState, setConnectionState] = useState(isSupabaseConfigured ? 'connecting' : 'local')
-  const [accessCode, setAccessCode] = useState('')
-  const [isEditorUnlocked, setIsEditorUnlocked] = useState(false)
-  const [showCodePrompt, setShowCodePrompt] = useState(false)
-  const [codeBusy, setCodeBusy] = useState(false)
+  const [connectionState, setConnectionState] = useState(isBackendConfigured ? 'connecting' : 'local')
   const [selectedId, setSelectedId] = useState(null)
   const [notice, setNotice] = useState('')
   const [requestBusy, setRequestBusy] = useState(false)
@@ -276,7 +269,7 @@ function App() {
 
   const customTasks = useMemo(() => customRows.map(mapCustomTask), [customRows])
   const tasks = useMemo(
-    () => mergeTaskTracking([...initialTasks, ...customTasks], remoteTracking, savedTracking, isSupabaseConfigured),
+    () => mergeTaskTracking([...initialTasks, ...customTasks], remoteTracking, savedTracking, isBackendConfigured),
     [customTasks, remoteTracking, savedTracking],
   )
   const sectors = useMemo(() => [...new Set(tasks.filter((task) => task.scope === scope).map((task) => task.sector))], [tasks, scope])
@@ -295,42 +288,14 @@ function App() {
   const noDeadlineCount = currentTasks.filter((task) => !task.dueDate && task.status !== 'Resolvida').length
 
   useEffect(() => {
-    if (!supabase) return undefined
+    if (!isBackendConfigured) return undefined
 
-    let active = true
-    const load = async () => {
-      const [statusesResult, requestsResult] = await Promise.all([
-        supabase.from('task_statuses').select('task_id,status,priority,due_date,tracking_note'),
-        supabase.from('custom_tasks').select('*').order('created_at', { ascending: false }),
-      ])
-      if (!active) return
-      if (statusesResult.error || requestsResult.error) {
-        setConnectionState('error')
-        return
-      }
-      setRemoteTracking(trackingMap(statusesResult.data))
-      setCustomRows(requestsResult.data || [])
-      setConnectionState('connected')
-    }
-    load()
-
-    const channel = supabase
-      .channel('task-statuses-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'task_statuses' }, (payload) => {
-        const row = payload.new
-        if (row?.task_id && row?.status) {
-          setRemoteTracking((current) => ({ ...current, ...trackingMap([row]) }))
-        }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_tasks' }, (payload) => {
-        if (payload.new?.id) setCustomRows((current) => upsertCustomTask(current, payload.new))
-      })
-      .subscribe()
-
-    return () => {
-      active = false
-      supabase.removeChannel(channel)
-    }
+    return subscribeToData({
+      onTracking: (rows) => setRemoteTracking(trackingMap(rows)),
+      onRequests: setCustomRows,
+      onReady: () => setConnectionState('connected'),
+      onError: () => setConnectionState('error'),
+    })
   }, [])
 
   function flash(message) {
@@ -348,24 +313,15 @@ function App() {
       trackingNote: Object.prototype.hasOwnProperty.call(changes, 'trackingNote') ? changes.trackingNote : (task.trackingNote || ''),
     }
 
-    if (supabase) {
-      if (!isEditorUnlocked || !accessCode) {
-        setShowCodePrompt(true)
-        flash('Informe o código de acesso para editar o acompanhamento.')
-        return
-      }
-      const { error } = await supabase.rpc('update_task_tracking', {
-        p_task_id: id,
-        p_status: nextTracking.status,
-        p_priority: nextTracking.priority,
-        p_due_date: nextTracking.dueDate || null,
-        p_tracking_note: nextTracking.trackingNote || null,
-        p_code: accessCode,
+    if (isBackendConfigured) {
+      const { error } = await saveTracking({
+        taskId: id,
+        status: nextTracking.status,
+        priority: nextTracking.priority,
+        dueDate: nextTracking.dueDate || null,
+        trackingNote: nextTracking.trackingNote || null,
       })
       if (error) {
-        setIsEditorUnlocked(false)
-        setAccessCode('')
-        setShowCodePrompt(true)
         flash('Não foi possível salvar a alteração compartilhada.')
         return
       }
@@ -384,29 +340,6 @@ function App() {
     localStorage.removeItem(LEGACY_STORAGE_KEY)
     setSavedTracking({})
     flash('Acompanhamento inicial restaurado.')
-  }
-
-  async function unlockEditing(event) {
-    event.preventDefault()
-    if (!supabase || accessCode.length !== 4) return
-    setCodeBusy(true)
-    const { data, error } = await supabase.rpc('verify_status_code', { p_code: accessCode })
-    setCodeBusy(false)
-    if (error || data !== true) {
-      setAccessCode('')
-      flash('Código incorreto. Tente novamente.')
-      return
-    }
-    setIsEditorUnlocked(true)
-    setShowCodePrompt(false)
-    flash('Edição liberada neste dispositivo.')
-  }
-
-  function lockEditing() {
-    setAccessCode('')
-    setIsEditorUnlocked(false)
-    setShowCodePrompt(false)
-    flash('Edição bloqueada neste dispositivo.')
   }
 
   async function copyReport() {
@@ -448,7 +381,7 @@ function App() {
 
   async function createRequest(event) {
     event.preventDefault()
-    if (!supabase) {
+    if (!isBackendConfigured) {
       flash('O cadastro compartilhado não está disponível neste ambiente.')
       return
     }
@@ -456,37 +389,33 @@ function App() {
     const form = event.currentTarget
     const values = new FormData(form)
     setRequestBusy(true)
-    const { data, error } = await supabase.rpc('create_task_request', {
-      p_title: values.get('title'),
-      p_description: values.get('description'),
-      p_sector: values.get('sector'),
-      p_requester: values.get('requester'),
-      p_priority: values.get('priority'),
-      p_reference: values.get('reference'),
-      p_impact: values.get('impact'),
-      p_expected_result: values.get('expectedResult'),
-      p_attachment_url: values.get('attachmentUrl'),
-      p_code: values.get('code'),
+    const { data, error } = await submitRequest({
+      title: values.get('title'),
+      description: values.get('description'),
+      sector: values.get('sector'),
+      requester: values.get('requester'),
+      priority: values.get('priority'),
+      reference: values.get('reference'),
+      impact: values.get('impact'),
+      expectedResult: values.get('expectedResult'),
+      attachmentUrl: values.get('attachmentUrl'),
     })
     setRequestBusy(false)
 
     if (error || !data?.id) {
-      const codeField = form.elements.namedItem('code')
-      if (codeField) codeField.value = ''
-      flash(error?.code === '28000' ? 'Código incorreto. Revise e tente novamente.' : 'Não foi possível adicionar a solicitação.')
+      flash('Não foi possível adicionar a solicitação.')
       return
     }
 
     const dueDate = values.get('dueDate') || null
     let dueDateSaved = true
     if (dueDate) {
-      const { error: trackingError } = await supabase.rpc('update_task_tracking', {
-        p_task_id: data.id,
-        p_status: data.status,
-        p_priority: data.priority,
-        p_due_date: dueDate,
-        p_tracking_note: null,
-        p_code: values.get('code'),
+      const { error: trackingError } = await saveTracking({
+        taskId: data.id,
+        status: data.status,
+        priority: data.priority,
+        dueDate,
+        trackingNote: null,
       })
       if (!trackingError) {
         setRemoteTracking((current) => ({
@@ -518,14 +447,9 @@ function App() {
           <span className="brand__copy"><strong>Elétrica Visão</strong><small>Implantação ERP Lizy</small></span>
         </a>
         <div className="topbar__meta">
-          {isSupabaseConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
+          {isBackendConfigured && connectionState === 'connected' && <span className="live-indicator"><Radio size={15} /> Ao vivo</span>}
           <span><ShieldCheck size={15} /> Relatório técnico</span>
           <span className="topbar__date">Base atualizada em 22/09/2026</span>
-          {isSupabaseConfigured && (isEditorUnlocked ? (
-            <button className="session-button" onClick={lockEditing}><Lock size={14} /> Bloquear edição</button>
-          ) : (
-            <button className="session-button" onClick={() => setShowCodePrompt((visible) => !visible)}><KeyRound size={14} /> Liberar edição</button>
-          ))}
         </div>
       </header>
 
@@ -550,20 +474,12 @@ function App() {
 
         <section className="content" aria-label="Painel de acompanhamento">
           <div className="notice-card">
-            {isSupabaseConfigured ? <Radio size={19} /> : <AlertTriangle size={19} />}
-            <p>{isSupabaseConfigured
-              ? <><strong>Acompanhamento compartilhado:</strong> estados, prioridades e prazos são atualizados ao vivo. Para alterar, libere a edição com o código compartilhado.</>
+            {isBackendConfigured ? <Radio size={19} /> : <AlertTriangle size={19} />}
+            <p>{isBackendConfigured
+              ? <><strong>Acompanhamento compartilhado:</strong> estados, prioridades e prazos são atualizados ao vivo para todos os visitantes.</>
               : <><strong>Critério de leitura:</strong> prioridades são uma classificação proposta pela Elétrica Visão. Alterações de estado feitas aqui ficam somente neste dispositivo; o link público sempre inicia com a base consolidada.</>
             }</p>
           </div>
-
-          {showCodePrompt && isSupabaseConfigured && !isEditorUnlocked && (
-            <form className="login-panel" onSubmit={unlockEditing}>
-              <div><strong>Liberar edição do acompanhamento</strong><span>Digite o código compartilhado de quatro números.</span></div>
-              <label><span className="sr-only">Código de acesso</span><input type="password" inputMode="numeric" autoComplete="off" required minLength="4" maxLength="4" pattern="[0-9]{4}" value={accessCode} onChange={(event) => setAccessCode(event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="••••" /></label>
-              <button type="submit" disabled={codeBusy || accessCode.length !== 4}>{codeBusy ? 'Verificando…' : 'Liberar edição'}</button>
-            </form>
-          )}
 
           <div className="summary-grid">
             <SummaryCard icon={PackageCheck} label="Demandas operacionais" value={currentTotal} detail={`${customRows.length} abertas pelo painel`} />
@@ -641,7 +557,7 @@ function App() {
                   <div role="cell"><Badge type={priorityType(task.priority)}>{task.priority}</Badge></div>
                   <div role="cell"><DeadlineBadge task={task} /></div>
                   <div role="cell">
-                    <label className={`select-wrap select-wrap--status status-control status-control--${statusType(task.status)}`}><span className="sr-only">Estado de {task.id}</span><select disabled={isSupabaseConfigured && !isEditorUnlocked} value={task.status} onChange={(event) => updateTracking(task.id, { status: event.target.value })}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
+                    <label className={`select-wrap select-wrap--status status-control status-control--${statusType(task.status)}`}><span className="sr-only">Estado de {task.id}</span><select value={task.status} onChange={(event) => updateTracking(task.id, { status: event.target.value })}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><ChevronDown size={15} /></label>
                   </div>
                   <div role="cell"><button className="detail-button" onClick={() => setSelectedId(task.id)}>Ver item <ArrowRight size={15} /></button></div>
                 </article>
@@ -651,8 +567,8 @@ function App() {
             </div>
 
             <footer className="workspace__footer">
-              {isSupabaseConfigured ? <p><strong>Atualização em tempo real:</strong> visitantes veem estado, prioridade, prazo e registro do acompanhamento; a alteração exige o código de acesso.</p> : <p><strong>Persistência local:</strong> as alterações de acompanhamento não são compartilhadas com outros usuários.</p>}
-              {!isSupabaseConfigured && <button onClick={resetLocalTracking}><RotateCcw size={14} /> Restaurar acompanhamento inicial</button>}
+              {isBackendConfigured ? <p><strong>Atualização em tempo real:</strong> qualquer visitante pode alterar estado, prioridade, prazo e registro do acompanhamento.</p> : <p><strong>Persistência local:</strong> as alterações de acompanhamento não são compartilhadas com outros usuários.</p>}
+              {!isBackendConfigured && <button onClick={resetLocalTracking}><RotateCcw size={14} /> Restaurar acompanhamento inicial</button>}
             </footer>
             </>}
           </div>
@@ -675,7 +591,7 @@ function App() {
       </main>
 
       {notice && <div className="toast" role="status"><Check size={16} /> {notice}</div>}
-      <DetailPanel key={selectedTask ? `${selectedTask.id}:${selectedTask.trackingNote || ''}` : 'empty'} task={selectedTask} canEdit={!isSupabaseConfigured || isEditorUnlocked} onClose={() => setSelectedId(null)} onTrackingChange={updateTracking} />
+      <DetailPanel key={selectedTask ? `${selectedTask.id}:${selectedTask.trackingNote || ''}` : 'empty'} task={selectedTask} canEdit onClose={() => setSelectedId(null)} onTrackingChange={updateTracking} />
     </>
   )
 }

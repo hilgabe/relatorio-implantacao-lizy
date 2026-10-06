@@ -1,0 +1,79 @@
+rules_version = '2';
+
+// Painel público sem autenticação: qualquer visitante lê e edita o
+// acompanhamento e abre solicitações. A única garantia aqui é de formato
+// (mesmas regras que antes viviam nas funções RPC do Supabase) — não há
+// controle de quem fez cada alteração.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidStatus(v) {
+      return v in ['Nova', 'Em análise', 'Aguardando Lizy', 'Resolvida'];
+    }
+
+    function isValidPriority(v) {
+      return v in ['Altíssima', 'Crítica', 'Alta', 'Média', 'Baixa'];
+    }
+
+    function strLen(v, min, max) {
+      return v is string && v.size() >= min && v.size() <= max;
+    }
+
+    function isHttpUrl(v) {
+      return v is string && v.size() <= 1000 && v.matches('^https?://.*');
+    }
+
+    match /task_statuses/{taskId} {
+      allow read: if true;
+
+      allow create, update: if taskId.matches('^((ALM|AQU|COM|HIS|PCP)-[0-9]{3}|SOL-[0-9]{4})$')
+        && isValidStatus(request.resource.data.status)
+        && (request.resource.data.priority == null || isValidPriority(request.resource.data.priority))
+        && (request.resource.data.due_date == null || (request.resource.data.due_date is string && request.resource.data.due_date.matches('^\\d{4}-\\d{2}-\\d{2}$')))
+        && (request.resource.data.tracking_note == null || strLen(request.resource.data.tracking_note, 0, 1500))
+        && request.resource.data.updated_at == request.time
+        && request.resource.data.keys().hasOnly(['status', 'priority', 'due_date', 'tracking_note', 'updated_at']);
+
+      allow delete: if false;
+    }
+
+    match /custom_tasks/{taskId} {
+      allow read: if true;
+
+      // Solicitações só são criadas pelo formulário; não são editadas depois
+      // (o prazo inicial entra como um registro em task_statuses).
+      allow create: if taskId.matches('^SOL-[0-9]{4}$')
+        && strLen(request.resource.data.title, 5, 120)
+        && strLen(request.resource.data.description, 10, 2000)
+        && strLen(request.resource.data.sector, 2, 80)
+        && strLen(request.resource.data.requester, 2, 100)
+        && strLen(request.resource.data.owner, 2, 100)
+        && isValidPriority(request.resource.data.priority)
+        && request.resource.data.status == 'Nova'
+        && strLen(request.resource.data.impact, 5, 1000)
+        && strLen(request.resource.data.expected_result, 5, 1500)
+        && (request.resource.data.reference == null || strLen(request.resource.data.reference, 0, 500))
+        && (request.resource.data.attachment_url == null || isHttpUrl(request.resource.data.attachment_url))
+        && request.resource.data.created_at == request.time
+        && request.resource.data.keys().hasOnly([
+             'title', 'description', 'sector', 'requester', 'owner', 'priority',
+             'status', 'reference', 'impact', 'expected_result', 'attachment_url', 'created_at',
+           ]);
+
+      allow update, delete: if false;
+    }
+
+    // Contador público usado só para gerar o próximo identificador SOL-xxxx.
+    match /_meta/custom_task_counter {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['value'])
+        && request.resource.data.value is int && request.resource.data.value > 0;
+      allow update: if request.resource.data.keys().hasOnly(['value'])
+        && request.resource.data.value == resource.data.value + 1;
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -23,26 +23,30 @@ O conteúdo gerado em `dist/` pode ser publicado como site estático. Na Vercel,
 
 ### Limitações do MVP
 
-- a integração de acompanhamento compartilhado usa Supabase Realtime e depende das variáveis de ambiente do projeto na Vercel;
-- o código compartilhado simplifica o acesso, mas não substitui autenticação individual nem identifica qual pessoa realizou cada alteração;
+- a integração de acompanhamento compartilhado usa Firebase (Firestore em tempo real + Cloud Functions) e depende das variáveis de ambiente do projeto na Vercel;
+- o painel é totalmente aberto: não há autenticação, código de acesso nem identificação de quem realizou cada alteração;
 - prioridades são uma classificação proposta pela Elétrica Visão, não uma definição da Lizy;
 - os itens de PCP/Peritagem passaram para **Demandas atuais**; o estado de acompanhamento de cada um continua indicando o andamento registrado;
 - o histórico precisa ser revalidado e não comprova o funcionamento atual do ERP.
 
 ## Acompanhamento compartilhado ao vivo
 
-O painel usa Supabase Realtime. A tabela `task_statuses` reúne estado, prioridade, prazo e o registro textual da última atualização ou solução. Ela permite leitura pública, bloqueia gravações diretas e recebe alterações somente por uma função protegida por código compartilhado. A Vercel precisa das variáveis abaixo:
+O painel usa Cloud Firestore com atualização em tempo real (projeto Firebase `relatorio-implantacao-lizy`, banco em `southamerica-east1`, plano gratuito Spark — sem Cloud Functions). A coleção `task_statuses` reúne estado, prioridade, prazo e o registro textual da última atualização ou solução; a coleção `custom_tasks` guarda as solicitações abertas pelo painel. As regras (`firestore.rules`) permitem **leitura e gravação públicas, sem autenticação**: qualquer visitante altera o acompanhamento ou abre uma solicitação direto pelo app, sem código de acesso. As próprias regras validam o formato dos campos (status e prioridade dentre as opções válidas, tamanho de texto, formato de data e de URL) — a mesma validação que antes vivia nas funções RPC do Supabase. A Vercel precisa das variáveis abaixo (valores públicos do app web; veja `.env.example`):
 
 ```text
-VITE_SUPABASE_URL
-VITE_SUPABASE_PUBLISHABLE_KEY
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_APP_ID
 ```
 
-O código fica armazenado no banco apenas como hash e é mantido somente na memória do navegador durante a sessão. Visitantes acompanham as atualizações em tempo real. A interface distingue pendentes de resolvidas, ordena os itens por prioridade, sinaliza prazo vencido/próximo/ausente e oferece textos prontos editáveis para justificar uma pendência ou registrar a solução aplicada. Nunca use chave `service_role` no frontend.
+Visitantes acompanham as atualizações em tempo real. A interface distingue pendentes de resolvidas, ordena os itens por prioridade, sinaliza prazo vencido/próximo/ausente e oferece textos prontos editáveis para justificar uma pendência ou registrar a solução aplicada.
+
+Publicação do backend: `firebase deploy --only firestore`.
 
 ## Abertura de solicitações
 
-O botão **Abrir solicitação** leva ao formulário compartilhado. Cada envio validado recebe um identificador automático `SOL-xxxx`, inicia no estado **Nova** e aparece ao vivo para todos os visitantes. O formulário aceita um prazo inicial opcional e a gravação exige o mesmo código de quatro dígitos usado para alterar o acompanhamento.
+O botão **Abrir solicitação** leva ao formulário compartilhado. Cada envio validado recebe um identificador automático `SOL-xxxx`, inicia no estado **Nova** e aparece ao vivo para todos os visitantes. O formulário aceita um prazo inicial opcional; não há código de acesso.
 
 Como o painel é público, o formulário avisa para não registrar senhas, dados pessoais, documentos confidenciais ou informações comerciais sigilosas. O anexo é informado por link `https://`; arquivos não são enviados diretamente ao banco.
 
